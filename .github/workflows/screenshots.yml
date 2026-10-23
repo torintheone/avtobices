@@ -35,7 +35,7 @@ jobs:
           add-job-summary: never
 
       - name: Нарисовать экраны
-        run: ./gradlew --stacktrace -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_21_X64 -Pscreenshots testDebugUnitTest
+        run: ./gradlew --stacktrace -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_21_X64 -Pscreenshots testDebugUnitTest 2>&1 | tee gradle.log
 
       - name: Отчёт тестов
         if: failure()
@@ -44,6 +44,37 @@ jobs:
           name: screenshot-test-reports
           path: app/build/reports/tests/
           if-no-files-found: ignore
+
+      - name: Ошибки сборки — в служебный пререлиз
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "commit: $GITHUB_SHA"
+            echo "workflow: $GITHUB_WORKFLOW"
+            echo
+            grep -E "^(e|w): |FAILED|What went wrong|Caused by|> Could not|error:" gradle.log | head -150 || true
+            echo
+            python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          for path in glob.glob("app/build/test-results/**/*.xml", recursive=True):
+              root = ET.parse(path).getroot()
+              for case in root.iter("testcase"):
+                  for f in list(case.findall("failure")) + list(case.findall("error")):
+                      print("ТЕСТ", case.get("classname"), case.get("name"))
+                      print((f.get("message") or "")[:500])
+                      print((f.text or "")[:1500])
+                      print("---")
+          PY
+          } > "screenshots-errors.txt" 2>&1
+          TAG=ci-screenshots
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
+              --title "Служебное: скриншоты экранов" \
+              --notes "Служебные файлы сборки. Устанавливать отсюда нечего — APK лежат в обычных релизах."
+          fi
+          gh release upload "$TAG" "screenshots-errors.txt" --clobber
 
       - name: Выложить в пререлиз ci-screenshots
         env:
