@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
@@ -19,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
@@ -30,31 +32,60 @@ import app.steamgarage.AppContainer
 import app.steamgarage.R
 import app.steamgarage.data.Settings
 import app.steamgarage.data.ThemeMode
+import app.steamgarage.data.db.CarEntity
 import app.steamgarage.domain.ThresholdSettings
+import app.steamgarage.notify.CheckScheduler
+import app.steamgarage.notify.SystemSettings
 import app.steamgarage.ui.Format
 import app.steamgarage.ui.components.BrassButton
 import app.steamgarage.ui.components.NumberField
 import app.steamgarage.ui.components.SectionTitle
 import app.steamgarage.ui.components.SteamPanel
+import app.steamgarage.ui.components.SteamSwitchRow
 import app.steamgarage.ui.components.SteamTextField
+import app.steamgarage.ui.components.SteamTimePickerDialog
 import app.steamgarage.ui.components.ValveButton
 import app.steamgarage.ui.screens.SteamScreen
+import app.steamgarage.ui.screens.notify.rememberNotificationsAllowed
 import app.steamgarage.ui.screens.steamViewModel
 import app.steamgarage.ui.theme.Steam
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(private val container: AppContainer) : ViewModel() {
     private val settingsRepo = container.settings
+    private val context = container.appContext
 
     val settings: StateFlow<Settings?> =
         settingsRepo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    val cars: StateFlow<List<CarEntity>> = container.repository.snapshot
+        .map { snapshot -> snapshot.cars.sortedBy { it.name.lowercase() } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     fun setDeviceName(name: String) = launch { settingsRepo.setDeviceName(name) }
     fun setTheme(mode: ThemeMode) = launch { settingsRepo.setThemeMode(mode) }
-    fun setThresholds(t: ThresholdSettings) = launch { settingsRepo.setThresholds(t) }
+    fun setThresholds(t: ThresholdSettings) = launch {
+        settingsRepo.setThresholds(t)
+        CheckScheduler.checkSoon(context)
+    }
+
+    fun setCheckTime(hour: Int, minute: Int) = launch {
+        settingsRepo.setCheckTime(hour, minute)
+        CheckScheduler.scheduleDaily(context, hour, minute, reschedule = true)
+    }
+
+    fun setMileageReminderDays(days: Int) = launch {
+        settingsRepo.setMileageReminderDays(days)
+        CheckScheduler.checkSoon(context)
+    }
+
+    fun setCarMuted(carId: String, muted: Boolean) = launch { settingsRepo.setCarMuted(carId, muted) }
+
+    fun checkNow() = CheckScheduler.checkSoon(context)
 
     private fun launch(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
@@ -65,6 +96,8 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
 fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
     val vm = steamViewModel { SettingsViewModel(it) }
     val settings by vm.settings.collectAsStateWithLifecycle()
+    val cars by vm.cars.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val s = settings ?: return
     SettingsScreen(
         settings = s,
@@ -73,8 +106,32 @@ fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
         onTheme = vm::setTheme,
         onThresholds = vm::setThresholds,
         onAbout = onAbout,
+        notifications = NotificationSettings(
+            allowed = rememberNotificationsAllowed(),
+            cars = cars,
+            showAutostart = SystemSettings.needsAutostartHint(),
+            onCheckTime = vm::setCheckTime,
+            onMileageReminderDays = vm::setMileageReminderDays,
+            onCarMuted = vm::setCarMuted,
+            onCheckNow = vm::checkNow,
+            onOpenSystemNotifications = { SystemSettings.openNotificationSettings(context) },
+            onOpenAppDetails = { SystemSettings.openAppDetails(context) },
+        ),
     )
 }
+
+/** Всё для раздела «Уведомления»: состояние разрешения, машины и действия. */
+class NotificationSettings(
+    val allowed: Boolean = true,
+    val cars: List<CarEntity> = emptyList(),
+    val showAutostart: Boolean = false,
+    val onCheckTime: (Int, Int) -> Unit = { _, _ -> },
+    val onMileageReminderDays: (Int) -> Unit = {},
+    val onCarMuted: (String, Boolean) -> Unit = { _, _ -> },
+    val onCheckNow: () -> Unit = {},
+    val onOpenSystemNotifications: () -> Unit = {},
+    val onOpenAppDetails: () -> Unit = {},
+)
 
 @Composable
 fun SettingsScreen(
@@ -84,6 +141,7 @@ fun SettingsScreen(
     onTheme: (ThemeMode) -> Unit,
     onThresholds: (ThresholdSettings) -> Unit,
     onAbout: () -> Unit,
+    notifications: NotificationSettings = NotificationSettings(),
 ) {
     val palette = Steam.palette
     SteamScreen(title = stringResource(R.string.tab_settings), chromePadding = chromePadding) {
@@ -125,6 +183,23 @@ fun SettingsScreen(
             }
         }
 
+        // ── Уведомления ──
+        SectionTitle(stringResource(R.string.settings_notifications))
+        NotificationsPanel(settings, notifications)
+        if (notifications.cars.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.settings_cars_notify))
+            SteamPanel(Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.settings_cars_notify_hint), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+                notifications.cars.forEach { car ->
+                    SteamSwitchRow(
+                        text = car.name,
+                        checked = car.id !in settings.mutedCars,
+                        onCheckedChange = { on -> notifications.onCarMuted(car.id, !on) },
+                    )
+                }
+            }
+        }
+
         // ── Пороги ──
         SectionTitle(stringResource(R.string.settings_thresholds))
         ThresholdsPanel(settings.thresholds, onThresholds)
@@ -135,6 +210,70 @@ fun SettingsScreen(
         Text(stringResource(R.string.settings_more_soon), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
     }
 }
+
+@Composable
+private fun NotificationsPanel(settings: Settings, n: NotificationSettings) {
+    val palette = Steam.palette
+    var timeDialog by rememberSaveable { mutableStateOf(false) }
+    var checkStarted by rememberSaveable { mutableStateOf(false) }
+    var reminder by rememberSaveable(settings.mileageReminderDays) { mutableStateOf(settings.mileageReminderDays.toString()) }
+    val reminderDays = Format.parseInt(reminder)?.takeIf { it in 1..MAX_REMINDER_DAYS }
+    SteamPanel(Modifier.fillMaxWidth()) {
+        if (!n.allowed) {
+            Text(stringResource(R.string.settings_notifications_off), style = MaterialTheme.typography.bodyMedium, color = palette.errorText)
+            BrassButton(text = stringResource(R.string.settings_notifications_allow), onClick = n.onOpenSystemNotifications)
+            Spacer(Modifier.height(4.dp))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.settings_check_time, Format.time(settings.checkHour, settings.checkMinute)),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            ValveButton(text = stringResource(R.string.settings_check_time_change), onClick = { timeDialog = true })
+        }
+        Text(stringResource(R.string.settings_check_time_hint), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+        NumberField(
+            value = reminder,
+            onValueChange = { reminder = it },
+            label = stringResource(R.string.settings_mileage_reminder),
+            suffix = stringResource(R.string.unit_days),
+            supportingText = stringResource(R.string.settings_mileage_reminder_hint),
+            maxDigits = 3,
+            imeAction = ImeAction.Done,
+        )
+        if (reminderDays != null && reminderDays != settings.mileageReminderDays) {
+            BrassButton(text = stringResource(R.string.action_save), onClick = { n.onMileageReminderDays(reminderDays) })
+        }
+        ValveButton(
+            text = stringResource(R.string.settings_check_now),
+            onClick = {
+                n.onCheckNow()
+                checkStarted = true
+            },
+        )
+        if (checkStarted) {
+            Text(stringResource(R.string.settings_check_now_done), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+        }
+        ValveButton(text = stringResource(R.string.settings_system_notifications), onClick = n.onOpenSystemNotifications)
+        if (n.showAutostart) {
+            ValveButton(text = stringResource(R.string.settings_autostart), onClick = n.onOpenAppDetails)
+        }
+    }
+    if (timeDialog) {
+        SteamTimePickerDialog(
+            title = stringResource(R.string.settings_check_time_title),
+            hour = settings.checkHour,
+            minute = settings.checkMinute,
+            onDismiss = { timeDialog = false },
+            onConfirm = n.onCheckTime,
+        )
+    }
+}
+
+/** Больше года без показаний — напоминание теряет смысл. */
+private const val MAX_REMINDER_DAYS = 365
 
 @Composable
 private fun ThresholdsPanel(current: ThresholdSettings, onSave: (ThresholdSettings) -> Unit) {

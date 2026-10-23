@@ -5,6 +5,14 @@ import android.content.Context
 import app.steamgarage.data.GarageRepository
 import app.steamgarage.data.SettingsRepository
 import app.steamgarage.data.db.AppDatabase
+import app.steamgarage.notify.Channels
+import app.steamgarage.notify.CheckScheduler
+import app.steamgarage.ui.navigation.NavRequest
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 /** Ручной контейнер зависимостей (без Hilt, как в SPEC.md): всё создаётся один раз на процесс. */
 class AppContainer(context: Context) {
@@ -12,6 +20,12 @@ class AppContainer(context: Context) {
     val database: AppDatabase = AppDatabase.create(appContext)
     val settings: SettingsRepository = SettingsRepository(appContext)
     val repository: GarageRepository = GarageRepository(database, settings)
+
+    /** Фоновые дела на всё время жизни процесса. */
+    val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** Переход, о котором попросило уведомление; экран навигации забирает его и обнуляет. */
+    val navRequests = MutableStateFlow<NavRequest?>(null)
 }
 
 class SteamGarageApplication : Application() {
@@ -21,6 +35,15 @@ class SteamGarageApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        Channels.create(this)
+        container.appScope.launch {
+            val settings = container.settings.current()
+            CheckScheduler.scheduleDaily(this@SteamGarageApplication, settings.checkHour, settings.checkMinute)
+        }
+        // Пробег, замена, расходник — после любого изменения данных внеочередная проверка сроков.
+        container.appScope.launch {
+            container.repository.changes.collect { CheckScheduler.checkSoon(this@SteamGarageApplication) }
+        }
     }
 }
 

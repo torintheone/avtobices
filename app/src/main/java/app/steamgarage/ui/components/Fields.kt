@@ -13,13 +13,16 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -224,5 +227,34 @@ fun SteamDatePickerDialog(
         },
     ) {
         DatePicker(state = state)
+    }
+}
+
+/** Выбор времени — циферблат в латунной рамке, 24 часа. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SteamTimePickerDialog(
+    title: String,
+    hour: Int,
+    minute: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (hour: Int, minute: Int) -> Unit,
+) {
+    val state = rememberTimePickerState(initialHour = hour, initialMinute = minute, is24Hour = true)
+    SteamDialog(
+        title = title,
+        onDismiss = onDismiss,
+        buttons = {
+            ValveButton(text = stringResource(R.string.action_cancel), onClick = onDismiss)
+            BrassButton(
+                text = stringResource(R.string.action_ok),
+                onClick = {
+                    onConfirm(state.hour, state.minute)
+                    onDismiss()
+                },
+            )
+        },
+    ) {
+        TimePicker(state = state, modifier = Modifier.align(Alignment.CenterHorizontally))
     }
 }

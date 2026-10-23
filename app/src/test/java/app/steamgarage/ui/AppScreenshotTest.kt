@@ -26,6 +26,7 @@ import app.steamgarage.domain.ThresholdSettings
 import app.steamgarage.ui.components.BrassBottomBar
 import app.steamgarage.ui.components.NavTab
 import app.steamgarage.ui.components.SteamBackground
+import app.steamgarage.ui.components.SteamTimePickerDialog
 import app.steamgarage.ui.components.TextureCache
 import app.steamgarage.ui.screens.ShowcaseScreen
 import app.steamgarage.ui.screens.car.CarScreen
@@ -39,6 +40,8 @@ import app.steamgarage.ui.screens.journal.JournalScreen
 import app.steamgarage.ui.screens.journal.Period
 import app.steamgarage.ui.screens.journal.journal
 import app.steamgarage.ui.screens.onboarding.OnboardingScreen
+import app.steamgarage.ui.screens.notify.NotificationPermissionDialog
+import app.steamgarage.ui.screens.settings.NotificationSettings
 import app.steamgarage.ui.screens.settings.SettingsScreen
 import app.steamgarage.ui.theme.SteamTheme
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
@@ -165,16 +168,21 @@ class AppScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = "w400dp-h1400dp-hdpi")
+    @Config(qualifiers = "w400dp-h2600dp-hdpi")
     fun settingsDark() = capture("07_settings_dark") {
         WithTabs(3) {
             SettingsScreen(
-                settings = Settings(deviceName = "Папа"),
+                settings = Settings(deviceName = "Папа", mutedCars = setOf("c2")),
                 chromePadding = it,
                 onDeviceName = {},
                 onTheme = {},
                 onThresholds = {},
                 onAbout = {},
+                notifications = NotificationSettings(
+                    allowed = false,
+                    cars = Samples.snapshot(today).cars,
+                    showAutostart = true,
+                ),
             )
         }
     }
@@ -206,6 +214,16 @@ class AppScreenshotTest {
     @Config(qualifiers = "w400dp-h2600dp-hdpi")
     fun showcaseLight() = capture("11_showcase_light", dark = false) {
         ShowcaseScreen(contentPadding = PaddingValues(), themeMode = ThemeMode.LIGHT, onThemeModeChange = {})
+    }
+
+    @Test
+    fun permissionDialogDark() = capture("12_permission_dialog_dark", screen = true) {
+        NotificationPermissionDialog(onAllow = {}, onLater = {})
+    }
+
+    @Test
+    fun timePickerLight() = capture("13_time_picker_light", dark = false, screen = true) {
+        SteamTimePickerDialog(title = "Время проверки", hour = 10, minute = 0, onDismiss = {}, onConfirm = { _, _ -> })
     }
 }
 

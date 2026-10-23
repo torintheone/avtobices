@@ -21,6 +21,9 @@ object Format {
 
     fun date(date: LocalDate): String = date.format(dateFormat)
 
+    /** Время ЧЧ:ММ: 9, 5 → «09:05». */
+    fun time(hour: Int, minute: Int): String = "%02d:%02d".format(hour, minute)
+
     /** Копейки → «3 500» или «3 500,50» (без знака ₽ — его добавляет строка ресурса). */
     fun money(kopecks: Long): String {
         val rubles = kopecks / 100

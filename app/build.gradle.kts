@@ -115,6 +115,8 @@ tasks.withType<Test>().configureEach {
     if (providers.gradleProperty("screenshots").isPresent) {
         filter { includeTestsMatching("*ScreenshotTest") }
         systemProperty("roborazzi.test.record", "true")
+        // PNG — результат задачи: если тесты взяты из кеша сборки, картинки восстанавливаются вместе с ними.
+        if (name == "testDebugUnitTest") outputs.dir(layout.buildDirectory.dir("outputs/roborazzi"))
     } else {
         filter { excludeTestsMatching("*ScreenshotTest") }
     }
@@ -143,6 +145,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.work.runtime.ktx)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 

@@ -1,5 +1,6 @@
 package app.steamgarage.domain
 
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -68,6 +69,25 @@ class NotificationPolicyTest {
         val remind = NotificationPolicy.decide(ItemStatus.SOON, snoozed, day + 7)
         assertTrue(remind.notify)
         assertEquals(null, remind.state.remindOnDay)
+    }
+
+    @Test
+    fun item300KmLeftWithThreshold500GivesSoonOnce() {
+        // Сценарий проверки этапа 2 целиком: расчёт статуса и решение об уведомлении.
+        val today = LocalDate.of(2026, 10, 23)
+        val state = StatusCalculator.evaluate(
+            rule = ItemRule(intervalKm = 10_000, intervalMonths = null, warnKm = 500),
+            services = listOf(ServicePoint(today.minusMonths(6), 50_000)),
+            currentKm = 59_700,
+            averageDailyKm = null,
+            today = today,
+        )
+        assertEquals(ItemStatus.SOON, state.status)
+        assertEquals(300, state.kmLeft)
+        val first = NotificationPolicy.decide(state.status, NotifyState(), today.toEpochDay())
+        assertTrue(first.notify)
+        val nextCheck = NotificationPolicy.decide(state.status, first.state, today.toEpochDay())
+        assertFalse(nextCheck.notify)
     }
 
     @Test

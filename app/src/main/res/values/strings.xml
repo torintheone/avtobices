@@ -247,7 +247,7 @@
     <string name="settings_threshold_reset">Вернуть по умолчанию</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_about_open">О приложении и лицензии</string>
-    <string name="settings_more_soon">Уведомления, звук, голос и общий гараж появятся в следующих версиях.</string>
+    <string name="settings_more_soon">Звук, голос и общий гараж появятся в следующих версиях.</string>
     <string name="settings_sound_toggle">Звуки механизмов</string>
     <string name="settings_voice_toggle">Голос механика</string>
     <string name="settings_toggle_soon">Заработает на этапе 3</string>
@@ -294,4 +294,67 @@
     <string name="sample_cabin_filter">Салонный фильтр</string>
     <string name="sample_brake_fluid">Тормозная жидкость</string>
     <string name="sample_timing_belt">Ремень ГРМ</string>
+
+    <!-- Уведомления (этап 2) -->
+    <string name="channel_due">Сроки замены</string>
+    <string name="channel_due_description">Расходник скоро пора менять или срок уже прошёл</string>
+    <string name="channel_mileage">Пробег</string>
+    <string name="channel_mileage_description">Напоминание обновить показания одометра</string>
+    <string name="channel_sync">Синхронизация</string>
+    <string name="channel_sync_description">Состояние общего гаража, без звука</string>
+    <plurals name="notify_due_overdue_title">
+        <item quantity="one">%1$s: %2$d расходник пора менять</item>
+        <item quantity="few">%1$s: %2$d расходника пора менять</item>
+        <item quantity="many">%1$s: %2$d расходников пора менять</item>
+        <item quantity="other">%1$s: %2$d расходника пора менять</item>
+    </plurals>
+    <plurals name="notify_due_soon_title">
+        <item quantity="one">%1$s: %2$d расходник скоро менять</item>
+        <item quantity="few">%1$s: %2$d расходника скоро менять</item>
+        <item quantity="many">%1$s: %2$d расходников скоро менять</item>
+        <item quantity="other">%1$s: %2$d расходника скоро менять</item>
+    </plurals>
+    <string name="notify_due_mixed_title">%1$s: пора менять — %2$d, скоро — %3$d</string>
+    <string name="notify_item_line">%1$s: %2$s</string>
+    <string name="notify_short_km_left">осталось %1$s км</string>
+    <string name="notify_short_km_over">превышено на %1$s км</string>
+    <string name="notify_short_days_left">осталось %1$d дн.</string>
+    <string name="notify_short_days_over">просрочено на %1$d дн.</string>
+    <string name="notify_action_replaced">Заменено</string>
+    <string name="notify_action_snooze">Напомнить через неделю</string>
+    <string name="notify_mileage_title">%1$s: обновите пробег</string>
+    <plurals name="notify_mileage_text">
+        <item quantity="one">Показаний одометра не было %1$d день — сроки по километрам могли устареть.</item>
+        <item quantity="few">Показаний одометра не было %1$d дня — сроки по километрам могли устареть.</item>
+        <item quantity="many">Показаний одометра не было %1$d дней — сроки по километрам могли устареть.</item>
+        <item quantity="other">Показаний одометра не было %1$d дня — сроки по километрам могли устареть.</item>
+    </plurals>
+    <string name="notify_action_mileage">Ввести пробег</string>
+
+    <!-- Разрешение и подсказка про автозапуск (этап 2) -->
+    <string name="permission_title">Уведомления о сроках</string>
+    <string name="permission_text">Приложение пришлёт уведомление, когда расходник скоро пора менять или срок уже прошёл, и напомнит обновить пробег. Без разрешения сроки будут видны только на вкладке «Сроки».</string>
+    <string name="permission_allow">Разрешить</string>
+    <string name="permission_later">Не сейчас</string>
+    <string name="autostart_title">Чтобы проверки не засыпали</string>
+    <string name="autostart_text">На телефонах %1$s фоновые задачи часто останавливаются. В настройках приложения разрешите автозапуск, а в разделе «Батарея» выберите «Без ограничений» — иначе уведомления о сроках могут не приходить.</string>
+    <string name="autostart_open">Открыть настройки</string>
+    <string name="autostart_dismiss">Понятно</string>
+
+    <!-- Настройки уведомлений (этап 2) -->
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_notifications_off">Уведомления запрещены в настройках телефона — сроки видны только в приложении.</string>
+    <string name="settings_notifications_allow">Разрешить уведомления</string>
+    <string name="settings_check_time">Ежедневная проверка в %1$s</string>
+    <string name="settings_check_time_hint">Телефон может проверить сроки до часа позже — так он бережёт батарею.</string>
+    <string name="settings_check_time_change">Изменить время</string>
+    <string name="settings_check_time_title">Время проверки</string>
+    <string name="settings_check_now">Проверить сроки сейчас</string>
+    <string name="settings_check_now_done">Проверка запущена — уведомление придёт, если срок подошёл.</string>
+    <string name="settings_mileage_reminder">Напомнить о пробеге через</string>
+    <string name="settings_mileage_reminder_hint">Если показаний одометра не было столько дней, а у машины есть сроки по километрам, придёт напоминание.</string>
+    <string name="settings_cars_notify">Уведомлять по машинам</string>
+    <string name="settings_cars_notify_hint">Выключите машину, о которой этот телефон напоминать не должен.</string>
+    <string name="settings_system_notifications">Системные настройки уведомлений</string>
+    <string name="settings_autostart">Автозапуск и батарея</string>
 </resources>

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Уведомления о сроках замены (Android 13+ спрашивает разрешение). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".SteamGarageApplication"
         android:allowBackup="true"
@@ -20,6 +23,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Кнопка «Напомнить через неделю» в уведомлении. -->
+        <receiver
+            android:name=".notify.NotificationActionReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

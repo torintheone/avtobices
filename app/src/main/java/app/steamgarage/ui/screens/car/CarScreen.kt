@@ -1,5 +1,6 @@
 package app.steamgarage.ui.screens.car
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +57,7 @@ import app.steamgarage.ui.screens.steamViewModel
 import app.steamgarage.ui.theme.Steam
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -179,6 +183,7 @@ fun CarHost(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CarScreen(
     summary: CarSummary,
@@ -194,6 +199,14 @@ fun CarScreen(
     onSaveTemplate: () -> Unit,
 ) {
     val car = summary.car
+    // Из уведомления: подсвеченный расходник прокручивается в поле зрения.
+    val highlightRequester = remember { BringIntoViewRequester() }
+    LaunchedEffect(highlightItemId) {
+        if (highlightItemId != null && summary.items.any { it.item.id == highlightItemId }) {
+            delay(250)
+            highlightRequester.bringIntoView()
+        }
+    }
     SteamScreen(
         title = car.name,
         chromePadding = chromePadding,
@@ -249,7 +262,13 @@ fun CarScreen(
             )
         } else {
             summary.items.forEach { item ->
-                ItemCard(item, highlighted = item.item.id == highlightItemId, onClick = { onOpenItem(item.item.id) })
+                val highlighted = item.item.id == highlightItemId
+                ItemCard(
+                    summary = item,
+                    highlighted = highlighted,
+                    onClick = { onOpenItem(item.item.id) },
+                    modifier = if (highlighted) Modifier.bringIntoViewRequester(highlightRequester) else Modifier,
+                )
             }
         }
 
@@ -267,11 +286,11 @@ fun CarScreen(
 
 /** Карточка расходника: табличка категории, название, статус, манометр и остаток. */
 @Composable
-fun ItemCard(summary: ItemSummary, highlighted: Boolean, onClick: () -> Unit) {
+fun ItemCard(summary: ItemSummary, highlighted: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val palette = Steam.palette
     val inactive = !summary.item.active
     SteamPanel(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         onClick = onClick,
         onClickLabel = stringResource(R.string.item_open),
         highlighted = highlighted,

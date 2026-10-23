@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,6 +47,7 @@ import app.steamgarage.ui.navigation.GarageRoute
 import app.steamgarage.ui.navigation.ItemEditRoute
 import app.steamgarage.ui.navigation.ItemRoute
 import app.steamgarage.ui.navigation.JournalRoute
+import app.steamgarage.ui.navigation.NavRequest
 import app.steamgarage.ui.navigation.OnboardingRoute
 import app.steamgarage.ui.navigation.SettingsRoute
 import app.steamgarage.ui.navigation.ShowcaseRoute
@@ -58,6 +61,7 @@ import app.steamgarage.ui.screens.garage.GarageHost
 import app.steamgarage.ui.screens.item.ItemEditHost
 import app.steamgarage.ui.screens.item.ItemHost
 import app.steamgarage.ui.screens.journal.JournalHost
+import app.steamgarage.ui.screens.notify.NotificationOnboarding
 import app.steamgarage.ui.screens.onboarding.OnboardingHost
 import app.steamgarage.ui.screens.settings.SettingsHost
 import app.steamgarage.ui.screens.template.TemplateHost
@@ -115,6 +119,15 @@ private fun AppNavigation(startOnboarding: Boolean, container: AppContainer) {
         destination.hierarchy.any { it.hasRoute<JournalRoute>() } -> 2
         destination.hierarchy.any { it.hasRoute<SettingsRoute>() } -> 3
         else -> -1
+    }
+    // Нажатие на уведомление: открыть машину с подсвеченным расходником (и, если нужно, форму).
+    val request by container.navRequests.collectAsStateWithLifecycle()
+    LaunchedEffect(request) {
+        val open = request as? NavRequest.OpenCar ?: return@LaunchedEffect
+        container.navRequests.value = null
+        nav.navigate(CarRoute(open.carId, open.highlightItemId, open.action, open.actionItems)) {
+            popUpTo(nav.graph.findStartDestination().id)
+        }
     }
     val tabs = listOf(
         NavTab(stringResource(R.string.tab_garage), R.drawable.ic_nav_garage),
@@ -229,6 +242,7 @@ private fun AppNavigation(startOnboarding: Boolean, container: AppContainer) {
             }
         }
     }
+    NotificationOnboarding(container)
 }
 
 /** Переход на вкладку: одна копия каждой вкладки, состояние вкладок сохраняется. */
