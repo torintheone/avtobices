@@ -69,12 +69,12 @@ class CarEditViewModel(private val container: AppContainer, private val carId: S
         viewModelScope.launch {
             if (carId == null) {
                 val id = repo.createCar(draft)
-                container.sound.play(Sfx.STEAM)
+                container.saved()
                 container.voice.say(VoiceEvent.CAR_ADDED)
                 done(id, true)
             } else {
                 repo.updateCar(carId, draft)
-                container.sound.play(Sfx.STEAM)
+                container.saved()
                 done(carId, false)
             }
         }

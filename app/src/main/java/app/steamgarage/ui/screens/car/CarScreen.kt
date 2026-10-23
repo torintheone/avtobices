@@ -88,7 +88,7 @@ class CarViewModel(private val container: AppContainer, private val carId: Strin
     fun addMileage(km: Int, correctPast: Boolean) {
         viewModelScope.launch {
             repo.addMileage(carId, km, LocalDate.now(), correctPast)
-            container.sound.play(Sfx.STEAM)
+            container.saved()
             container.voice.say(VoiceEvent.MILEAGE)
         }
     }
@@ -105,7 +105,7 @@ class CarViewModel(private val container: AppContainer, private val carId: Strin
         val line = form.lines.firstOrNull() ?: return
         viewModelScope.launch {
             repo.updateService(service.id, form.date, form.km, line.costKopecks, line.part, form.place, form.note)
-            container.sound.play(Sfx.STEAM)
+            container.saved()
         }
     }
 
@@ -132,14 +132,14 @@ class CarViewModel(private val container: AppContainer, private val carId: Strin
                 container.settings.hideSharedCar(carId)
                 repo.setCarGarage(carId, null)
             }
-            container.sound.play(Sfx.STEAM)
+            container.saved()
         }
     }
 
     fun saveTemplate(name: String) {
         viewModelScope.launch {
             repo.saveTemplate(name, carId)
-            container.sound.play(Sfx.STEAM)
+            container.saved()
         }
     }
 }

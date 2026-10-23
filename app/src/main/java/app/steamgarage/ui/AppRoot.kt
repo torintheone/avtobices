@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -26,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +57,7 @@ import app.steamgarage.ui.components.BrassBottomBar
 import app.steamgarage.ui.components.LocalSfx
 import app.steamgarage.ui.components.NavTab
 import app.steamgarage.ui.components.SteamBackground
+import app.steamgarage.ui.components.SteamPuff
 import app.steamgarage.ui.components.SteamTopBar
 import app.steamgarage.ui.components.SyncIndicator
 import app.steamgarage.ui.components.SyncLamp
@@ -98,13 +103,25 @@ fun AppRoot() {
     val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val themeMode = settings?.themeMode ?: ThemeMode.DARK
     CompositionLocalProvider(LocalSfx provides container.sound) {
-        SteamTheme(themeMode) {
+        SteamTheme(themeMode, reduceMotionSetting = settings?.reduceMotion ?: false) {
             SystemBarsEffect(isDarkTheme(themeMode))
             SteamBackground {
                 val loaded = settings
                 if (loaded != null) {
                     AppNavigation(startOnboarding = !loaded.onboardingDone, container = container)
                     VoiceEffects(container, loaded)
+                    // Сохранение — клуб пара из медной трубы под верхней панелью.
+                    val puffs by container.steamPuffs.collectAsStateWithLifecycle()
+                    Box(Modifier.fillMaxSize()) {
+                        SteamPuff(
+                            trigger = puffs,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .statusBarsPadding()
+                                .padding(end = 28.dp)
+                                .size(76.dp),
+                        )
+                    }
                 }
             }
         }
@@ -256,6 +273,7 @@ private fun AppNavigation(startOnboarding: Boolean, container: AppContainer) {
                         chromePadding = padding,
                         onOpenItem = { nav.navigate(ItemRoute(it)) },
                         onAddCar = { nav.navigate(CarEditRoute()) },
+                        onOpenGarage = { nav.navigateTab(GarageRoute) },
                     )
                 }
                 composable<JournalRoute> {
@@ -263,6 +281,7 @@ private fun AppNavigation(startOnboarding: Boolean, container: AppContainer) {
                         chromePadding = padding,
                         onOpenItem = { nav.navigate(ItemRoute(it)) },
                         onAddCar = { nav.navigate(CarEditRoute()) },
+                        onOpenGarage = { nav.navigateTab(GarageRoute) },
                     )
                 }
                 composable<SettingsRoute> {

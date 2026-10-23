@@ -54,11 +54,13 @@ fun isDarkTheme(mode: ThemeMode): Boolean = when (mode) {
 @Composable
 fun SteamTheme(
     mode: ThemeMode = ThemeMode.DARK,
+    reduceMotionSetting: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val palette = if (isDarkTheme(mode)) DarkPalette else LightPalette
     val context = LocalContext.current
-    val reduceMotion = remember { animationsDisabled(context) }
+    val systemNoAnimations = remember { animationsDisabled(context) }
+    val reduceMotion = reduceMotionSetting || systemNoAnimations
     val colorScheme = remember(palette) { palette.toColorScheme() }
     CompositionLocalProvider(
         LocalSteamPalette provides palette,

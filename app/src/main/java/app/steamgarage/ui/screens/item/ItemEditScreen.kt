@@ -87,7 +87,7 @@ class ItemEditViewModel(
     fun save(draft: ItemDraft, last: LastReplacement?, done: () -> Unit) {
         viewModelScope.launch {
             if (itemId == null) repo.addItems(carId, listOf(draft to last)) else repo.updateItem(itemId, draft)
-            container.sound.play(Sfx.STEAM)
+            container.saved()
             done()
         }
     }

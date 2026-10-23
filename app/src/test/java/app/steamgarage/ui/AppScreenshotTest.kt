@@ -47,6 +47,8 @@ import app.steamgarage.ui.screens.journal.Period
 import app.steamgarage.ui.screens.journal.journal
 import app.steamgarage.ui.screens.onboarding.OnboardingScreen
 import app.steamgarage.ui.screens.notify.NotificationPermissionDialog
+import app.steamgarage.ui.screens.settings.BackupMessage
+import app.steamgarage.ui.screens.settings.BackupSettings
 import app.steamgarage.ui.screens.settings.NotificationSettings
 import app.steamgarage.ui.screens.settings.SettingsScreen
 import app.steamgarage.ui.screens.voice.VoiceMissingDialog
@@ -186,7 +188,7 @@ class AppScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = "w400dp-h3600dp-hdpi")
+    @Config(qualifiers = "w400dp-h4400dp-hdpi")
     fun settingsDark() = capture("07_settings_dark") {
         WithTabs(3) {
             SettingsScreen(
@@ -202,6 +204,7 @@ class AppScreenshotTest {
                     showAutostart = true,
                 ),
                 garage = GarageUiState(configured = true, status = SyncStatus.NoGarage),
+                backup = BackupSettings(message = BackupMessage.Imported(42)),
             )
         }
     }

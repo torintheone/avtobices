@@ -69,7 +69,12 @@ class DueViewModel(container: AppContainer) : ViewModel() {
 private val DueGroups = listOf(ItemStatus.OVERDUE, ItemStatus.SOON, ItemStatus.NO_DATA, ItemStatus.OK)
 
 @Composable
-fun DueHost(chromePadding: PaddingValues, onOpenItem: (String) -> Unit, onAddCar: () -> Unit) {
+fun DueHost(
+    chromePadding: PaddingValues,
+    onOpenItem: (String) -> Unit,
+    onAddCar: () -> Unit,
+    onOpenGarage: () -> Unit = {},
+) {
     val vm = steamViewModel { DueViewModel(it) }
     val cars by vm.cars.collectAsStateWithLifecycle()
     var carFilter by rememberSaveable { mutableStateOf<String?>(null) }
@@ -80,6 +85,7 @@ fun DueHost(chromePadding: PaddingValues, onOpenItem: (String) -> Unit, onAddCar
         onCarFilter = { carFilter = it },
         onOpenItem = onOpenItem,
         onAddCar = onAddCar,
+        onOpenGarage = onOpenGarage,
     )
 }
 
@@ -91,6 +97,7 @@ fun DueScreen(
     onCarFilter: (String?) -> Unit,
     onOpenItem: (String) -> Unit,
     onAddCar: () -> Unit,
+    onOpenGarage: () -> Unit = {},
 ) {
     SteamScreen(title = stringResource(R.string.tab_due), chromePadding = chromePadding) {
         if (cars == null) return@SteamScreen
@@ -109,9 +116,11 @@ fun DueScreen(
             .filter { carFilter == null || it.car.id == carFilter }
             .flatMap { car -> car.activeItems.map { car to it } }
         if (rows.isEmpty()) {
-            SteamPanel(Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.due_empty_no_items), style = MaterialTheme.typography.bodyMedium)
-            }
+            EmptyState(
+                text = stringResource(R.string.due_empty_no_items),
+                actionText = stringResource(R.string.action_open_garage),
+                onAction = onOpenGarage,
+            )
             return@SteamScreen
         }
         DueGroups.forEach { status ->

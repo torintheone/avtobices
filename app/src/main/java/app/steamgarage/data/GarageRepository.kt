@@ -1,6 +1,9 @@
 package app.steamgarage.data
 
 import androidx.room.withTransaction
+import app.steamgarage.data.backup.BackupCodec
+import app.steamgarage.data.backup.BackupFile
+import app.steamgarage.data.backup.BackupMerge
 import app.steamgarage.data.db.AppDatabase
 import app.steamgarage.data.db.CarEntity
 import app.steamgarage.data.db.ItemEntity
@@ -455,6 +458,47 @@ class GarageRepository(
     }
 
     suspend fun deleteTemplate(id: String) = templates.delete(id)
+
+    // ── Резервная копия ────────────────────────────────────────────────────
+
+    /** Все записи телефона в JSON, вместе с «надгробиями» и шаблонами. */
+    suspend fun exportBackup(): String = BackupCodec.encode(
+        BackupFile(
+            exportedAt = clock(),
+            cars = cars.all(),
+            items = items.all(),
+            services = services.all(),
+            mileage = mileage.all(),
+            templates = templates.all(),
+        ),
+    )
+
+    /**
+     * Восстановление со слиянием: из копии берутся записи, которых нет на телефоне или которые в копии свежее.
+     * Записи гаража, в котором телефон сейчас не состоит, становятся личными; записи текущего гаража
+     * помечаются к отправке. Возвращает число записанных записей.
+     */
+    suspend fun importBackup(text: String): Int {
+        val file = BackupCodec.decode(text)
+        val garageCode = db.garage().get()?.code
+        fun own(garageId: String?): String? = garageId?.takeIf { it == garageCode }
+        var written = 0
+        db.withTransaction {
+            val newCars = BackupMerge.winners(cars.all(), file.cars.map { it.copy(garageId = own(it.garageId), dirty = own(it.garageId) != null) })
+            val newItems = BackupMerge.winners(items.all(), file.items.map { it.copy(garageId = own(it.garageId), dirty = own(it.garageId) != null) })
+            val newServices = BackupMerge.winners(services.all(), file.services.map { it.copy(garageId = own(it.garageId), dirty = own(it.garageId) != null) })
+            val newMileage = BackupMerge.winners(mileage.all(), file.mileage.map { it.copy(garageId = own(it.garageId), dirty = own(it.garageId) != null) })
+            val newTemplates = BackupMerge.newTemplates(templates.all(), file.templates)
+            cars.upsertAll(newCars)
+            items.upsertAll(newItems)
+            services.upsertAll(newServices)
+            mileage.upsertAll(newMileage)
+            templates.upsertAll(newTemplates)
+            written = newCars.size + newItems.size + newServices.size + newMileage.size + newTemplates.size
+        }
+        if (written > 0) notifyChange(garageCode)
+        return written
+    }
 
     private fun ItemDraft.toEntity(id: String, car: CarEntity, s: Stamp) = ItemEntity(
         id = id,

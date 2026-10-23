@@ -4,23 +4,27 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.steamgarage.domain.Syncable
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /*
  * Таблицы базы. У каждой синхронизируемой записи — поля из раздела «Данные» SPEC.md:
  * id (UUID, не меняется), garageId (null — личная запись), updatedAt, updatedBy (устройство),
  * deleted («надгробие» вместо стирания) и dirty (изменение ещё не отправлено, только локально).
+ * @Serializable — для резервной копии в JSON; dirty в копию не попадает.
  * Производные величины (текущий пробег, последняя замена, статус) не хранятся — вычисляются.
  */
 
 /** Машина. Обязательно только название. */
 @Entity(tableName = "cars")
+@Serializable
 data class CarEntity(
     @PrimaryKey override val id: String,
     val garageId: String?,
     override val updatedAt: Long,
     override val updatedBy: String,
     override val deleted: Boolean = false,
-    val dirty: Boolean = false,
+    @Transient val dirty: Boolean = false,
     val name: String,
     val make: String = "",
     val model: String = "",
@@ -34,13 +38,14 @@ data class CarEntity(
 
 /** Расходник машины. Нужен хотя бы один интервал; пороги null — по глобальному правилу. */
 @Entity(tableName = "items", indices = [Index("carId")])
+@Serializable
 data class ItemEntity(
     @PrimaryKey override val id: String,
     val garageId: String?,
     override val updatedAt: Long,
     override val updatedBy: String,
     override val deleted: Boolean = false,
-    val dirty: Boolean = false,
+    @Transient val dirty: Boolean = false,
     val carId: String,
     val name: String,
     /** Имя значения [app.steamgarage.domain.Category]. */
@@ -56,13 +61,14 @@ data class ItemEntity(
 
 /** Запись замены. Одно ТО на несколько расходников — несколько записей с общим batchId. */
 @Entity(tableName = "services", indices = [Index("carId"), Index("itemId"), Index("batchId")])
+@Serializable
 data class ServiceEntity(
     @PrimaryKey override val id: String,
     val garageId: String?,
     override val updatedAt: Long,
     override val updatedBy: String,
     override val deleted: Boolean = false,
-    val dirty: Boolean = false,
+    @Transient val dirty: Boolean = false,
     val carId: String,
     val itemId: String,
     /** Дата замены: номер дня от эпохи (LocalDate.toEpochDay). */
@@ -81,13 +87,14 @@ data class ServiceEntity(
 
 /** Показание одометра. Текущий пробег — максимум по показаниям. */
 @Entity(tableName = "mileage", indices = [Index("carId"), Index("serviceId")])
+@Serializable
 data class MileageEntity(
     @PrimaryKey override val id: String,
     val garageId: String?,
     override val updatedAt: Long,
     override val updatedBy: String,
     override val deleted: Boolean = false,
-    val dirty: Boolean = false,
+    @Transient val dirty: Boolean = false,
     val carId: String,
     /** Номер дня от эпохи. */
     val date: Long,
@@ -125,6 +132,7 @@ data class CarNotifyStateEntity(
 
 /** Набор расходников, сохранённый как шаблон («Сохранить набор как шаблон»). Только локально. */
 @Entity(tableName = "templates")
+@Serializable
 data class TemplateEntity(
     @PrimaryKey val id: String,
     val name: String,

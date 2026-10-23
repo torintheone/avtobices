@@ -92,7 +92,7 @@ class ItemViewModel(private val container: AppContainer, private val itemId: Str
         val line = form.lines.firstOrNull() ?: return
         viewModelScope.launch {
             repo.updateService(service.id, form.date, form.km, line.costKopecks, line.part, form.place, form.note)
-            container.sound.play(Sfx.STEAM)
+            container.saved()
         }
     }
 

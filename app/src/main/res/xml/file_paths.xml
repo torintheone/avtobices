@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Файлы, которые приложение отдаёт другим через «Поделиться»: только резервные копии из кеша. -->
+<paths>
+    <cache-path name="backup" path="backup/" />
+</paths>

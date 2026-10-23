@@ -1,11 +1,14 @@
 package app.steamgarage.ui.screens.about
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.steamgarage.BuildConfig
 import app.steamgarage.R
@@ -35,6 +38,19 @@ fun AboutScreen(chromePadding: PaddingValues, onBack: () -> Unit, onShowcase: ()
             Text(stringResource(R.string.about_licenses_fonts), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.about_licenses_graphics), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.about_licenses_libraries), style = MaterialTheme.typography.bodyMedium)
+        }
+        SteamPanel(Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.about_source_hint), style = MaterialTheme.typography.bodyMedium)
+            val context = LocalContext.current
+            val url = stringResource(R.string.about_source_url)
+            ValveButton(
+                text = stringResource(R.string.about_source),
+                onClick = {
+                    runCatching {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    }
+                },
+            )
         }
         ValveButton(text = stringResource(R.string.showcase_title), onClick = onShowcase)
     }

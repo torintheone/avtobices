@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -25,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -76,13 +78,22 @@ fun SteamLever(
     val player = LocalSfx.current
     val currentOnPull by rememberUpdatedState(onPull)
     val travelPx = with(LocalDensity.current) { 56.dp.toPx() }
+    val reduceMotion = Steam.reduceMotion
+    var puffs by remember { mutableIntStateOf(0) }
 
     suspend fun pullFrom(start: Float) {
         busy = true
         player.play(sfx)
+        if (reduceMotion) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            currentOnPull()
+            busy = false
+            return
+        }
         travel.snapTo(start)
         travel.animateTo(1f, tween(durationMillis = 150, easing = FastOutSlowInEasing))
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        puffs++
         currentOnPull()
         travel.animateTo(0f, spring(dampingRatio = 0.35f, stiffness = Spring.StiffnessMediumLow))
         busy = false
@@ -136,8 +147,12 @@ fun SteamLever(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val progress = if (dragging) drag else travel.value
-        Canvas(modifier = Modifier.width(56.dp).height(64.dp)) {
-            drawLever(progress, palette)
+        Box {
+            Canvas(modifier = Modifier.width(56.dp).height(64.dp)) {
+                drawLever(progress, palette)
+            }
+            // Пар из-под рычага, когда он дошёл до упора.
+            SteamPuff(trigger = puffs, modifier = Modifier.width(56.dp).height(64.dp))
         }
         Spacer(Modifier.width(4.dp))
         Text(

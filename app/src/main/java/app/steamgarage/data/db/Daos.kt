@@ -178,6 +178,12 @@ interface TemplateDao {
     @Query("SELECT * FROM templates ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<TemplateEntity>>
 
+    @Query("SELECT * FROM templates")
+    suspend fun all(): List<TemplateEntity>
+
+    @Upsert
+    suspend fun upsertAll(entities: List<TemplateEntity>)
+
     @Upsert
     suspend fun upsert(entity: TemplateEntity)
 

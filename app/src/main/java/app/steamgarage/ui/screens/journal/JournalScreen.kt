@@ -84,7 +84,12 @@ fun GarageSnapshot.journal(carId: String?, category: Category?, period: Period, 
 }
 
 @Composable
-fun JournalHost(chromePadding: PaddingValues, onOpenItem: (String) -> Unit, onAddCar: () -> Unit) {
+fun JournalHost(
+    chromePadding: PaddingValues,
+    onOpenItem: (String) -> Unit,
+    onAddCar: () -> Unit,
+    onOpenGarage: () -> Unit = {},
+) {
     val vm = steamViewModel { JournalViewModel(it) }
     val snapshot by vm.snapshot.collectAsStateWithLifecycle()
     var carId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -107,6 +112,12 @@ fun JournalHost(chromePadding: PaddingValues, onOpenItem: (String) -> Unit, onAd
         onPeriod = { period = it.name },
         onOpenItem = onOpenItem,
         onAddCar = onAddCar,
+        onOpenGarage = onOpenGarage,
+        onResetFilters = {
+            carId = null
+            category = null
+            period = Period.ALL.name
+        },
     )
 }
 
@@ -124,6 +135,8 @@ fun JournalScreen(
     onPeriod: (Period) -> Unit,
     onOpenItem: (String) -> Unit,
     onAddCar: () -> Unit,
+    onOpenGarage: () -> Unit = {},
+    onResetFilters: () -> Unit = {},
 ) {
     val palette = Steam.palette
     Column(Modifier.fillMaxSize()) {
@@ -173,11 +186,21 @@ fun JournalScreen(
                         onAction = onAddCar,
                     )
                 }
+            } else if (loaded && snapshot.services.isEmpty()) {
+                item {
+                    EmptyState(
+                        text = stringResource(R.string.journal_empty_no_services),
+                        actionText = stringResource(R.string.action_open_garage),
+                        onAction = onOpenGarage,
+                    )
+                }
             } else if (loaded && entries.isEmpty()) {
                 item {
-                    SteamPanel(Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.journal_empty), style = MaterialTheme.typography.bodyMedium)
-                    }
+                    EmptyState(
+                        text = stringResource(R.string.journal_empty),
+                        actionText = stringResource(R.string.journal_reset_filters),
+                        onAction = onResetFilters,
+                    )
                 }
             } else {
                 item {

@@ -221,6 +221,9 @@
     <string name="journal_all_categories">Все категории</string>
     <string name="journal_summary">Записей: %1$d · затраты: %2$s ₽</string>
     <string name="journal_empty">Под эти фильтры замен нет.</string>
+    <string name="journal_empty_no_services">Замен пока нет. Откройте машину и потяните рычаг «Заменено» у расходника — запись появится здесь.</string>
+    <string name="journal_reset_filters">Сбросить фильтры</string>
+    <string name="action_open_garage">Открыть гараж</string>
     <string name="journal_empty_no_cars">Журнал пуст. Заведите машину и отметьте первую замену.</string>
     <string name="period_all">Всё время</string>
     <string name="period_last_12_months">Последние 12 месяцев</string>
@@ -455,4 +458,20 @@
     <string name="car_make_personal_text">Машина останется на этом телефоне и перестанет обновляться из гаража. У остальных участников она останется общей.</string>
     <string name="car_make_personal_confirm">Сделать личной</string>
     <string name="onboarding_join">Вступить в гараж по коду</string>
+
+    <!-- Полировка (этап 5) -->
+    <string name="settings_backup">Резервная копия</string>
+    <string name="backup_hint">Все машины, расходники, замены и пробег — в одном файле. Сохраните его в облако или отправьте себе. При восстановлении данные сливаются с теми, что уже на телефоне: ничего не пропадёт.</string>
+    <string name="backup_export">Сохранить копию</string>
+    <string name="backup_import">Восстановить из копии</string>
+    <string name="backup_share_chooser">Сохранить резервную копию</string>
+    <string name="backup_imported">Из копии восстановлено записей: %1$d</string>
+    <string name="backup_nothing_new">Новых данных в копии нет — всё уже на телефоне.</string>
+    <string name="backup_bad_file">Это не резервная копия «Парового гаража» или копия из более новой версии приложения.</string>
+    <string name="backup_read_error">Не удалось прочитать файл.</string>
+    <string name="settings_reduce_motion">Без анимаций</string>
+    <string name="about_source">Исходный код и инструкции</string>
+    <string name="about_source_hint">Как установить, настроить общий гараж и что нового в каждой версии — на странице проекта на GitHub.</string>
+    <string name="about_source_url" translatable="false">https://github.com/torintheone/avtobices</string>
+    <string name="settings_reduce_motion_hint">Стрелки, шестерни и пар не двигаются. Системная настройка «Отключить анимации» действует так же.</string>
 </resources>

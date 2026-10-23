@@ -32,6 +32,8 @@ data class Settings(
     val deviceName: String = "",
     val onboardingDone: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.DARK,
+    /** «Без анимаций»: стрелки, шестерни и пар не двигаются. */
+    val reduceMotion: Boolean = false,
     val thresholds: ThresholdSettings = ThresholdSettings.DEFAULT,
     val mileageReminderDays: Int = Defaults.MILEAGE_REMINDER_DAYS,
     val checkHour: Int = Defaults.CHECK_HOUR,
@@ -63,6 +65,7 @@ class SettingsRepository(context: Context) {
         val deviceName = stringPreferencesKey("device_name")
         val onboardingDone = booleanPreferencesKey("onboarding_done")
         val themeMode = stringPreferencesKey("theme_mode")
+        val reduceMotion = booleanPreferencesKey("reduce_motion")
         val warnPercent = intPreferencesKey("warn_percent")
         val warnKmMin = intPreferencesKey("warn_km_min")
         val warnKmMax = intPreferencesKey("warn_km_max")
@@ -104,6 +107,7 @@ class SettingsRepository(context: Context) {
     suspend fun setDeviceName(name: String) = edit { it[Keys.deviceName] = name.trim() }
     suspend fun setOnboardingDone() = edit { it[Keys.onboardingDone] = true }
     suspend fun setThemeMode(mode: ThemeMode) = edit { it[Keys.themeMode] = mode.name }
+    suspend fun setReduceMotion(enabled: Boolean) = edit { it[Keys.reduceMotion] = enabled }
 
     suspend fun setThresholds(t: ThresholdSettings) = edit {
         it[Keys.warnPercent] = t.percent
@@ -158,6 +162,7 @@ class SettingsRepository(context: Context) {
         deviceName = this[Keys.deviceName].orEmpty(),
         onboardingDone = this[Keys.onboardingDone] ?: false,
         themeMode = this[Keys.themeMode]?.let { v -> ThemeMode.entries.firstOrNull { it.name == v } } ?: ThemeMode.DARK,
+        reduceMotion = this[Keys.reduceMotion] ?: false,
         thresholds = ThresholdSettings(
             percent = this[Keys.warnPercent] ?: Defaults.WARN_PERCENT,
             kmMin = this[Keys.warnKmMin] ?: Defaults.WARN_KM_MIN,

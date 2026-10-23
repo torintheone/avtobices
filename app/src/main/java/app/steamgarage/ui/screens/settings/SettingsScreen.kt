@@ -1,5 +1,11 @@
 package app.steamgarage.ui.screens.settings
 
+import android.content.ClipData
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,6 +43,7 @@ import app.steamgarage.AppContainer
 import app.steamgarage.R
 import app.steamgarage.data.Settings
 import app.steamgarage.data.ThemeMode
+import app.steamgarage.data.backup.BackupFormatException
 import app.steamgarage.data.VoiceMode
 import app.steamgarage.data.db.CarEntity
 import app.steamgarage.domain.ThresholdSettings
@@ -61,12 +68,19 @@ import app.steamgarage.ui.screens.sync.GarageUiState
 import app.steamgarage.ui.screens.sync.shareGarageCode
 import app.steamgarage.ui.screens.steamViewModel
 import app.steamgarage.ui.theme.Steam
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.IOException
+import java.time.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SettingsViewModel(private val container: AppContainer) : ViewModel() {
     private val settingsRepo = container.settings
@@ -154,6 +168,47 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { container.sync.leaveGarage(keepData) }
     }
 
+    fun setReduceMotion(enabled: Boolean) = launch { settingsRepo.setReduceMotion(enabled) }
+
+    private val _backupMessage = MutableStateFlow<BackupMessage?>(null)
+    val backupMessage: StateFlow<BackupMessage?> = _backupMessage
+
+    /** Копия пишется в кеш, а наружу уходит через «Поделиться» (FileProvider). */
+    fun exportBackup(onReady: (Uri) -> Unit) {
+        viewModelScope.launch {
+            val text = container.repository.exportBackup()
+            val uri = withContext(Dispatchers.IO) {
+                val dir = File(context.cacheDir, BACKUP_DIR).apply { mkdirs() }
+                val file = File(dir, "steamgarage-backup-${LocalDate.now()}.json").apply { writeText(text) }
+                FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+            }
+            onReady(uri)
+        }
+    }
+
+    fun importBackup(uri: Uri) {
+        viewModelScope.launch {
+            _backupMessage.value = try {
+                val text = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
+                } ?: throw IOException("no stream")
+                val written = container.repository.importBackup(text)
+                if (written > 0) {
+                    container.saved()
+                    BackupMessage.Imported(written)
+                } else {
+                    BackupMessage.NothingNew
+                }
+            } catch (_: BackupFormatException) {
+                BackupMessage.BadFile
+            } catch (_: IOException) {
+                BackupMessage.ReadError
+            } catch (_: SecurityException) {
+                BackupMessage.ReadError
+            }
+        }
+    }
+
     fun installVoice() {
         if (!container.voice.openVoiceInstall()) SystemSettings.openTtsSettings(context)
     }
@@ -161,6 +216,38 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
     private fun launch(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
     }
+
+    private companion object {
+        /** Папка в кеше, открытая для «Поделиться» (res/xml/file_paths.xml). */
+        const val BACKUP_DIR = "backup"
+    }
+}
+
+/** Итог восстановления из копии. */
+sealed interface BackupMessage {
+    data class Imported(val count: Int) : BackupMessage
+    data object NothingNew : BackupMessage
+    data object BadFile : BackupMessage
+    data object ReadError : BackupMessage
+}
+
+/** Всё для раздела «Резервная копия». */
+class BackupSettings(
+    val message: BackupMessage? = null,
+    val onExport: () -> Unit = {},
+    val onImport: () -> Unit = {},
+)
+
+/** «Поделиться» файлом копии: облако, почта, мессенджер. */
+private fun shareBackup(context: Context, uri: Uri) {
+    val send = Intent(Intent.ACTION_SEND)
+        .setType("application/json")
+        .putExtra(Intent.EXTRA_STREAM, uri)
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    send.clipData = ClipData.newRawUri("", uri)
+    context.startActivity(
+        Intent.createChooser(send, context.getString(R.string.backup_share_chooser)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+    )
 }
 
 @Composable
@@ -170,7 +257,11 @@ fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
     val cars by vm.cars.collectAsStateWithLifecycle()
     val voiceStatus by vm.voiceStatus.collectAsStateWithLifecycle()
     val garageState by vm.garageState.collectAsStateWithLifecycle()
+    val backupMessage by vm.backupMessage.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) vm.importBackup(uri)
+    }
     val s = settings ?: return
     SettingsScreen(
         settings = s,
@@ -189,6 +280,13 @@ fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
             onCheckNow = vm::checkNow,
             onOpenSystemNotifications = { SystemSettings.openNotificationSettings(context) },
             onOpenAppDetails = { SystemSettings.openAppDetails(context) },
+        ),
+        onReduceMotion = vm::setReduceMotion,
+        backup = BackupSettings(
+            message = backupMessage,
+            onExport = { vm.exportBackup { uri -> shareBackup(context, uri) } },
+            // Файловые менеджеры называют JSON по-разному, поэтому выбор любого файла; чужой файл отсеет проверка.
+            onImport = { importLauncher.launch(arrayOf("*/*")) },
         ),
         garage = garageState,
         garageActions = GarageActions(
@@ -246,6 +344,8 @@ fun SettingsScreen(
     sound: SoundSettings = SoundSettings(),
     garage: GarageUiState = GarageUiState(),
     garageActions: GarageActions = GarageActions(),
+    onReduceMotion: (Boolean) -> Unit = {},
+    backup: BackupSettings = BackupSettings(),
 ) {
     val palette = Steam.palette
     SteamScreen(title = stringResource(R.string.tab_settings), chromePadding = chromePadding) {
@@ -315,6 +415,34 @@ fun SettingsScreen(
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
                 }
+            }
+            SteamSwitchRow(
+                text = stringResource(R.string.settings_reduce_motion),
+                supportingText = stringResource(R.string.settings_reduce_motion_hint),
+                checked = settings.reduceMotion,
+                onCheckedChange = onReduceMotion,
+            )
+        }
+
+        // ── Резервная копия ──
+        SectionTitle(stringResource(R.string.settings_backup))
+        SteamPanel(Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.backup_hint), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                ValveButton(text = stringResource(R.string.backup_export), onClick = backup.onExport)
+                ValveButton(text = stringResource(R.string.backup_import), onClick = backup.onImport)
+            }
+            backup.message?.let { message ->
+                Text(
+                    text = when (message) {
+                        is BackupMessage.Imported -> stringResource(R.string.backup_imported, message.count)
+                        BackupMessage.NothingNew -> stringResource(R.string.backup_nothing_new)
+                        BackupMessage.BadFile -> stringResource(R.string.backup_bad_file)
+                        BackupMessage.ReadError -> stringResource(R.string.backup_read_error)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (message is BackupMessage.Imported || message == BackupMessage.NothingNew) palette.text else palette.errorText,
+                )
             }
         }
 

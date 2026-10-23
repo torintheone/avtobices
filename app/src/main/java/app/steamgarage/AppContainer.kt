@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Ручной контейнер зависимостей (без Hilt, как в SPEC.md): всё создаётся один раз на процесс. */
@@ -50,6 +51,17 @@ class AppContainer(context: Context) {
 
     /** Голос механика. */
     val voice: Voice by lazy { Voice(appContext) { settingsState.value } }
+
+    private val _steamPuffs = MutableStateFlow(0)
+
+    /** Счётчик сохранений: каждое выпускает клуб пара из трубы в верхней панели. */
+    val steamPuffs: StateFlow<Int> = _steamPuffs
+
+    /** Сохранение: шипение пара и клуб пара. */
+    fun saved() {
+        sound.play(Sfx.STEAM)
+        _steamPuffs.update { it + 1 }
+    }
 
     /** Синхронизация общего гаража через Firebase. */
     val sync: SyncManager by lazy {
