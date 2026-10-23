@@ -37,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import app.steamgarage.AppContainer
 import app.steamgarage.R
+import app.steamgarage.ui.components.Sfx
 import app.steamgarage.data.ItemDraft
 import app.steamgarage.data.LastReplacement
 import app.steamgarage.data.UserTemplate
@@ -153,7 +154,10 @@ class TemplateViewModel(private val container: AppContainer, private val carId: 
             draft to last
         }
         viewModelScope.launch {
-            if (entries.isNotEmpty()) repo.addItems(carId, entries)
+            if (entries.isNotEmpty()) {
+                repo.addItems(carId, entries)
+                container.sound.play(Sfx.STEAM)
+            }
             done()
         }
     }

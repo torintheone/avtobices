@@ -3,15 +3,21 @@ package app.steamgarage
 import android.app.Application
 import android.content.Context
 import app.steamgarage.data.GarageRepository
+import app.steamgarage.data.Settings
 import app.steamgarage.data.SettingsRepository
 import app.steamgarage.data.db.AppDatabase
 import app.steamgarage.notify.Channels
 import app.steamgarage.notify.CheckScheduler
+import app.steamgarage.sound.SoundPlayer
+import app.steamgarage.sound.Voice
 import app.steamgarage.ui.navigation.NavRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Ручной контейнер зависимостей (без Hilt, как в SPEC.md): всё создаётся один раз на процесс. */
@@ -26,6 +32,15 @@ class AppContainer(context: Context) {
 
     /** Переход, о котором попросило уведомление; экран навигации забирает его и обнуляет. */
     val navRequests = MutableStateFlow<NavRequest?>(null)
+
+    /** Текущие настройки без ожидания: звуку и голосу они нужны мгновенно, в момент нажатия. */
+    val settingsState: StateFlow<Settings> = settings.settings.stateIn(appScope, SharingStarted.Eagerly, Settings())
+
+    /** Звуки механизмов. Создаются при первом обращении — то есть только когда открыт интерфейс. */
+    val sound: SoundPlayer by lazy { SoundPlayer(appContext) { settingsState.value } }
+
+    /** Голос механика. */
+    val voice: Voice by lazy { Voice(appContext) { settingsState.value } }
 }
 
 class SteamGarageApplication : Application() {

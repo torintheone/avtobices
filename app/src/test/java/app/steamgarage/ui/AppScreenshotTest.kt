@@ -43,6 +43,7 @@ import app.steamgarage.ui.screens.onboarding.OnboardingScreen
 import app.steamgarage.ui.screens.notify.NotificationPermissionDialog
 import app.steamgarage.ui.screens.settings.NotificationSettings
 import app.steamgarage.ui.screens.settings.SettingsScreen
+import app.steamgarage.ui.screens.voice.VoiceMissingDialog
 import app.steamgarage.ui.theme.SteamTheme
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -168,7 +169,7 @@ class AppScreenshotTest {
     }
 
     @Test
-    @Config(qualifiers = "w400dp-h2600dp-hdpi")
+    @Config(qualifiers = "w400dp-h3600dp-hdpi")
     fun settingsDark() = capture("07_settings_dark") {
         WithTabs(3) {
             SettingsScreen(
@@ -224,6 +225,11 @@ class AppScreenshotTest {
     @Test
     fun timePickerLight() = capture("13_time_picker_light", dark = false, screen = true) {
         SteamTimePickerDialog(title = "Время проверки", hour = 10, minute = 0, onDismiss = {}, onConfirm = { _, _ -> })
+    }
+
+    @Test
+    fun voiceMissingDialogLight() = capture("14_voice_missing_light", dark = false, screen = true) {
+        VoiceMissingDialog(onInstall = {}, onTurnOff = {}, onDismiss = {})
     }
 }
 

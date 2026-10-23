@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import app.steamgarage.R
 import app.steamgarage.appContainer
 import app.steamgarage.data.ThemeMode
 import app.steamgarage.ui.components.BrassBottomBar
+import app.steamgarage.ui.components.LocalSfx
 import app.steamgarage.ui.components.NavTab
 import app.steamgarage.ui.components.SteamBackground
 import app.steamgarage.ui.components.SteamTopBar
@@ -65,22 +67,26 @@ import app.steamgarage.ui.screens.notify.NotificationOnboarding
 import app.steamgarage.ui.screens.onboarding.OnboardingHost
 import app.steamgarage.ui.screens.settings.SettingsHost
 import app.steamgarage.ui.screens.template.TemplateHost
+import app.steamgarage.ui.screens.voice.VoiceEffects
 import app.steamgarage.ui.theme.SteamTheme
 import app.steamgarage.ui.theme.isDarkTheme
 import kotlinx.coroutines.launch
 
-/** Корень интерфейса: тема из настроек, фон, навигация с нижней панелью из четырёх вкладок. */
+/** Корень интерфейса: тема из настроек, фон, звуки и голос, навигация с нижней панелью из четырёх вкладок. */
 @Composable
 fun AppRoot() {
     val container = LocalContext.current.appContainer
     val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = null)
     val themeMode = settings?.themeMode ?: ThemeMode.DARK
-    SteamTheme(themeMode) {
-        SystemBarsEffect(isDarkTheme(themeMode))
-        SteamBackground {
-            val loaded = settings
-            if (loaded != null) {
-                AppNavigation(startOnboarding = !loaded.onboardingDone, container = container)
+    CompositionLocalProvider(LocalSfx provides container.sound) {
+        SteamTheme(themeMode) {
+            SystemBarsEffect(isDarkTheme(themeMode))
+            SteamBackground {
+                val loaded = settings
+                if (loaded != null) {
+                    AppNavigation(startOnboarding = !loaded.onboardingDone, container = container)
+                    VoiceEffects(container, loaded)
+                }
             }
         }
     }

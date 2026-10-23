@@ -13,10 +13,14 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -33,14 +37,17 @@ import app.steamgarage.AppContainer
 import app.steamgarage.R
 import app.steamgarage.data.Settings
 import app.steamgarage.data.ThemeMode
+import app.steamgarage.data.VoiceMode
 import app.steamgarage.data.db.CarEntity
 import app.steamgarage.domain.ThresholdSettings
 import app.steamgarage.notify.CheckScheduler
 import app.steamgarage.notify.SystemSettings
+import app.steamgarage.sound.VoiceStatus
 import app.steamgarage.ui.Format
 import app.steamgarage.ui.components.BrassButton
 import app.steamgarage.ui.components.NumberField
 import app.steamgarage.ui.components.SectionTitle
+import app.steamgarage.ui.components.Sfx
 import app.steamgarage.ui.components.SteamPanel
 import app.steamgarage.ui.components.SteamSwitchRow
 import app.steamgarage.ui.components.SteamTextField
@@ -88,6 +95,29 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
 
     fun checkNow() = CheckScheduler.checkSoon(context)
 
+    val voiceStatus: StateFlow<VoiceStatus> = container.voice.status
+
+    fun setSoundEnabled(enabled: Boolean) = launch { settingsRepo.setSoundEnabled(enabled) }
+
+    fun setSoundVolume(volume: Float) = launch {
+        settingsRepo.setSoundVolume(volume)
+        // Отпустили ползунок — щелчок новой громкостью.
+        container.sound.play(Sfx.CLICK)
+    }
+
+    fun setSoundInSilent(allowed: Boolean) = launch { settingsRepo.setSoundInSilent(allowed) }
+
+    fun setVoiceMode(mode: VoiceMode) = launch {
+        settingsRepo.setVoiceMode(mode)
+        if (mode != VoiceMode.OFF) container.voice.warmUp()
+    }
+
+    fun voiceTest() = container.voice.test()
+
+    fun installVoice() {
+        if (!container.voice.openVoiceInstall()) SystemSettings.openTtsSettings(context)
+    }
+
     private fun launch(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
     }
@@ -98,6 +128,7 @@ fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
     val vm = steamViewModel { SettingsViewModel(it) }
     val settings by vm.settings.collectAsStateWithLifecycle()
     val cars by vm.cars.collectAsStateWithLifecycle()
+    val voiceStatus by vm.voiceStatus.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val s = settings ?: return
     SettingsScreen(
@@ -118,8 +149,28 @@ fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
             onOpenSystemNotifications = { SystemSettings.openNotificationSettings(context) },
             onOpenAppDetails = { SystemSettings.openAppDetails(context) },
         ),
+        sound = SoundSettings(
+            voiceStatus = voiceStatus,
+            onSoundEnabled = vm::setSoundEnabled,
+            onSoundVolume = vm::setSoundVolume,
+            onSoundInSilent = vm::setSoundInSilent,
+            onVoiceMode = vm::setVoiceMode,
+            onVoiceTest = vm::voiceTest,
+            onInstallVoice = vm::installVoice,
+        ),
     )
 }
+
+/** Всё для разделов «Звук» и «Голос механика». */
+class SoundSettings(
+    val voiceStatus: VoiceStatus = VoiceStatus.IDLE,
+    val onSoundEnabled: (Boolean) -> Unit = {},
+    val onSoundVolume: (Float) -> Unit = {},
+    val onSoundInSilent: (Boolean) -> Unit = {},
+    val onVoiceMode: (VoiceMode) -> Unit = {},
+    val onVoiceTest: () -> Unit = {},
+    val onInstallVoice: () -> Unit = {},
+)
 
 /** Всё для раздела «Уведомления»: состояние разрешения, машины и действия. */
 class NotificationSettings(
@@ -143,6 +194,7 @@ fun SettingsScreen(
     onThresholds: (ThresholdSettings) -> Unit,
     onAbout: () -> Unit,
     notifications: NotificationSettings = NotificationSettings(),
+    sound: SoundSettings = SoundSettings(),
 ) {
     val palette = Steam.palette
     SteamScreen(title = stringResource(R.string.tab_settings), chromePadding = chromePadding) {
@@ -159,28 +211,6 @@ fun SettingsScreen(
             )
             if (name.trim() != settings.deviceName) {
                 BrassButton(text = stringResource(R.string.action_save), onClick = { onDeviceName(name) })
-            }
-        }
-
-        // ── Тема ──
-        SectionTitle(stringResource(R.string.settings_theme))
-        SteamPanel(Modifier.fillMaxWidth().selectableGroup()) {
-            listOf(
-                ThemeMode.DARK to R.string.settings_theme_dark,
-                ThemeMode.LIGHT to R.string.settings_theme_light,
-                ThemeMode.SYSTEM to R.string.settings_theme_system,
-            ).forEach { (mode, label) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 52.dp)
-                        .selectable(selected = settings.themeMode == mode, role = Role.RadioButton, onClick = { onTheme(mode) }),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(selected = settings.themeMode == mode, onClick = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
-                }
             }
         }
 
@@ -204,6 +234,34 @@ fun SettingsScreen(
         // ── Пороги ──
         SectionTitle(stringResource(R.string.settings_thresholds))
         ThresholdsPanel(settings.thresholds, onThresholds)
+
+        // ── Звук и голос ──
+        SectionTitle(stringResource(R.string.settings_sound))
+        SoundPanel(settings, sound)
+        SectionTitle(stringResource(R.string.settings_voice_toggle))
+        VoicePanel(settings, sound)
+
+        // ── Тема ──
+        SectionTitle(stringResource(R.string.settings_theme))
+        SteamPanel(Modifier.fillMaxWidth().selectableGroup()) {
+            listOf(
+                ThemeMode.DARK to R.string.settings_theme_dark,
+                ThemeMode.LIGHT to R.string.settings_theme_light,
+                ThemeMode.SYSTEM to R.string.settings_theme_system,
+            ).forEach { (mode, label) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp)
+                        .selectable(selected = settings.themeMode == mode, role = Role.RadioButton, onClick = { onTheme(mode) }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = settings.themeMode == mode, onClick = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        }
 
         // ── О приложении ──
         SectionTitle(stringResource(R.string.settings_about))
@@ -269,6 +327,79 @@ private fun NotificationsPanel(settings: Settings, n: NotificationSettings) {
             onDismiss = { timeDialog = false },
             onConfirm = n.onCheckTime,
         )
+    }
+}
+
+@Composable
+private fun SoundPanel(settings: Settings, sound: SoundSettings) {
+    val palette = Steam.palette
+    var volume by remember(settings.soundVolume) { mutableFloatStateOf(settings.soundVolume) }
+    SteamPanel(Modifier.fillMaxWidth()) {
+        SteamSwitchRow(
+            text = stringResource(R.string.settings_sound_toggle),
+            checked = settings.soundEnabled,
+            onCheckedChange = sound.onSoundEnabled,
+        )
+        Text(
+            stringResource(R.string.settings_sound_volume),
+            style = MaterialTheme.typography.labelLarge,
+            color = if (settings.soundEnabled) palette.text else palette.textSecondary,
+        )
+        Slider(
+            value = volume,
+            onValueChange = { volume = it },
+            onValueChangeFinished = { sound.onSoundVolume(volume) },
+            enabled = settings.soundEnabled,
+            colors = SliderDefaults.colors(
+                thumbColor = palette.brassLight,
+                activeTrackColor = palette.copper,
+                inactiveTrackColor = palette.surfaceDeep,
+                disabledThumbColor = palette.textSecondary,
+                disabledActiveTrackColor = palette.textSecondary,
+                disabledInactiveTrackColor = palette.surfaceDeep,
+            ),
+        )
+        SteamSwitchRow(
+            text = stringResource(R.string.settings_sound_in_silent),
+            supportingText = stringResource(R.string.settings_sound_in_silent_hint),
+            checked = settings.soundInSilent,
+            onCheckedChange = sound.onSoundInSilent,
+        )
+    }
+}
+
+@Composable
+private fun VoicePanel(settings: Settings, sound: SoundSettings) {
+    val palette = Steam.palette
+    SteamPanel(Modifier.fillMaxWidth().selectableGroup()) {
+        listOf(
+            Triple(VoiceMode.OFF, R.string.settings_voice_off, null),
+            Triple(VoiceMode.IMPORTANT, R.string.settings_voice_important, R.string.settings_voice_important_hint),
+            Triple(VoiceMode.ALL, R.string.settings_voice_all, R.string.settings_voice_all_hint),
+        ).forEach { (mode, label, hint) ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
+                    .selectable(selected = settings.voiceMode == mode, role = Role.RadioButton, onClick = { sound.onVoiceMode(mode) }),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected = settings.voiceMode == mode, onClick = null)
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+                    if (hint != null) {
+                        Text(stringResource(hint), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+                    }
+                }
+            }
+        }
+        if (sound.voiceStatus == VoiceStatus.NO_RUSSIAN && settings.voiceMode != VoiceMode.OFF) {
+            Text(stringResource(R.string.settings_voice_no_russian), style = MaterialTheme.typography.bodyMedium, color = palette.errorText)
+            BrassButton(text = stringResource(R.string.settings_voice_install), onClick = sound.onInstallVoice)
+        } else {
+            ValveButton(text = stringResource(R.string.settings_voice_test), onClick = sound.onVoiceTest)
+        }
     }
 }
 

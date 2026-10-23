@@ -40,6 +40,14 @@ object SystemSettings {
         if (!start(context, intent)) openAppDetails(context)
     }
 
+    /** Настройки синтеза речи: здесь скачивается русский голос, если нет экрана установки. */
+    fun openTtsSettings(context: Context) {
+        if (!start(context, Intent(TTS_SETTINGS))) openAppDetails(context)
+    }
+
+    /** Действие системных настроек «Синтез речи» — есть почти на всех телефонах, но не в Android SDK. */
+    private const val TTS_SETTINGS = "com.android.settings.TTS_SETTINGS"
+
     private fun start(context: Context, intent: Intent): Boolean = try {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         true

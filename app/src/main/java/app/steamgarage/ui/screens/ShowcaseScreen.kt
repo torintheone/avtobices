@@ -223,13 +223,13 @@ fun ShowcaseScreen(
             )
             SteamSwitchRow(
                 text = stringResource(R.string.settings_sound_toggle),
-                supportingText = stringResource(R.string.settings_toggle_soon),
+                supportingText = stringResource(R.string.showcase_toggle_demo),
                 checked = sound,
                 onCheckedChange = { sound = it },
             )
             SteamSwitchRow(
                 text = stringResource(R.string.settings_voice_toggle),
-                supportingText = stringResource(R.string.settings_toggle_soon),
+                supportingText = stringResource(R.string.showcase_toggle_demo),
                 checked = voice,
                 onCheckedChange = { voice = it },
             )

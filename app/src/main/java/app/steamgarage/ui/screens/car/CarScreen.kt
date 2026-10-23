@@ -30,6 +30,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import app.steamgarage.AppContainer
 import app.steamgarage.R
+import app.steamgarage.sound.VoiceEvent
+import app.steamgarage.ui.components.Sfx
 import app.steamgarage.data.CarSummary
 import app.steamgarage.data.ItemSummary
 import app.steamgarage.data.db.ServiceEntity
@@ -81,26 +83,41 @@ class CarViewModel(private val container: AppContainer, private val carId: Strin
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CarState())
 
     fun addMileage(km: Int, correctPast: Boolean) {
-        viewModelScope.launch { repo.addMileage(carId, km, LocalDate.now(), correctPast) }
+        viewModelScope.launch {
+            repo.addMileage(carId, km, LocalDate.now(), correctPast)
+            container.sound.play(Sfx.STEAM)
+            container.voice.say(VoiceEvent.MILEAGE)
+        }
     }
 
     fun recordService(form: ServiceForm) {
-        viewModelScope.launch { repo.recordService(carId, form.lines, form.date, form.km, form.place, form.note) }
+        // Звук здесь не нужен: рычаг «Записать замену» уже отыграл свой.
+        viewModelScope.launch {
+            repo.recordService(carId, form.lines, form.date, form.km, form.place, form.note)
+            container.voice.say(VoiceEvent.SERVICE)
+        }
     }
 
     fun updateService(service: ServiceEntity, form: ServiceForm) {
         val line = form.lines.firstOrNull() ?: return
         viewModelScope.launch {
             repo.updateService(service.id, form.date, form.km, line.costKopecks, line.part, form.place, form.note)
+            container.sound.play(Sfx.STEAM)
         }
     }
 
     fun deleteService(service: ServiceEntity) {
-        viewModelScope.launch { repo.deleteService(service.id) }
+        viewModelScope.launch {
+            repo.deleteService(service.id)
+            container.sound.play(Sfx.CLANG)
+        }
     }
 
     fun saveTemplate(name: String) {
-        viewModelScope.launch { repo.saveTemplate(name, carId) }
+        viewModelScope.launch {
+            repo.saveTemplate(name, carId)
+            container.sound.play(Sfx.STEAM)
+        }
     }
 }
 

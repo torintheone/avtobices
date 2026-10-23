@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import app.steamgarage.AppContainer
 import app.steamgarage.R
+import app.steamgarage.ui.components.Sfx
 import app.steamgarage.data.ItemDraft
 import app.steamgarage.data.LastReplacement
 import app.steamgarage.data.db.ItemEntity
@@ -86,6 +87,7 @@ class ItemEditViewModel(
     fun save(draft: ItemDraft, last: LastReplacement?, done: () -> Unit) {
         viewModelScope.launch {
             if (itemId == null) repo.addItems(carId, listOf(draft to last)) else repo.updateItem(itemId, draft)
+            container.sound.play(Sfx.STEAM)
             done()
         }
     }
@@ -94,6 +96,7 @@ class ItemEditViewModel(
         val id = itemId ?: return
         viewModelScope.launch {
             repo.deleteItem(id)
+            container.sound.play(Sfx.CLANG)
             done()
         }
     }

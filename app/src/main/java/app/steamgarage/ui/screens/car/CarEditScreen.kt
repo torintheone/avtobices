@@ -30,6 +30,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import app.steamgarage.AppContainer
 import app.steamgarage.R
+import app.steamgarage.sound.VoiceEvent
+import app.steamgarage.ui.components.Sfx
 import app.steamgarage.data.CarDraft
 import app.steamgarage.data.db.CarEntity
 import app.steamgarage.ui.Format
@@ -66,9 +68,13 @@ class CarEditViewModel(private val container: AppContainer, private val carId: S
     fun save(draft: CarDraft, done: (carId: String, created: Boolean) -> Unit) {
         viewModelScope.launch {
             if (carId == null) {
-                done(repo.createCar(draft), true)
+                val id = repo.createCar(draft)
+                container.sound.play(Sfx.STEAM)
+                container.voice.say(VoiceEvent.CAR_ADDED)
+                done(id, true)
             } else {
                 repo.updateCar(carId, draft)
+                container.sound.play(Sfx.STEAM)
                 done(carId, false)
             }
         }
@@ -78,6 +84,7 @@ class CarEditViewModel(private val container: AppContainer, private val carId: S
         val id = carId ?: return
         viewModelScope.launch {
             repo.deleteCar(id)
+            container.sound.play(Sfx.CLANG)
             done()
         }
     }

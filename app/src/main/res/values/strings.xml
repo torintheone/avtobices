@@ -247,10 +247,10 @@
     <string name="settings_threshold_reset">Вернуть по умолчанию</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_about_open">О приложении и лицензии</string>
-    <string name="settings_more_soon">Звук, голос и общий гараж появятся в следующих версиях.</string>
+    <string name="settings_more_soon">Общий гараж для нескольких телефонов появится в следующей версии.</string>
     <string name="settings_sound_toggle">Звуки механизмов</string>
     <string name="settings_voice_toggle">Голос механика</string>
-    <string name="settings_toggle_soon">Заработает на этапе 3</string>
+    <string name="showcase_toggle_demo">Здесь только для показа — настоящий переключатель в настройках</string>
 
     <!-- О приложении -->
     <string name="about_title">О приложении</string>
@@ -357,4 +357,52 @@
     <string name="settings_cars_notify_hint">Выключите машину, о которой этот телефон напоминать не должен.</string>
     <string name="settings_system_notifications">Системные настройки уведомлений</string>
     <string name="settings_autostart">Автозапуск и батарея</string>
+
+    <!-- Звук и голос (этап 3) -->
+    <string name="settings_sound">Звук</string>
+    <string name="settings_sound_volume">Громкость</string>
+    <string name="settings_sound_in_silent">Звук в беззвучном режиме</string>
+    <string name="settings_sound_in_silent_hint">Обычно в беззвучном и вибро-режиме приложение молчит — и звуки, и голос.</string>
+    <string name="settings_voice_off">Выключен</string>
+    <string name="settings_voice_important">Только важное</string>
+    <string name="settings_voice_important_hint">Замена, синхронизация и предупреждения о сроках</string>
+    <string name="settings_voice_all">Все действия</string>
+    <string name="settings_voice_all_hint">Ещё новая машина и ввод пробега</string>
+    <string name="settings_voice_test">Послушать</string>
+    <string name="settings_voice_no_russian">В телефоне нет русского голоса — механик молчит.</string>
+    <string name="settings_voice_install">Установить голос</string>
+    <string name="voice_missing_title">Нет русского голоса</string>
+    <string name="voice_missing_text">В телефоне не установлен русский голос для озвучки. Установите его — или выключите голос механика.</string>
+    <string name="voice_missing_install">Установить</string>
+    <string name="voice_missing_off">Выключить голос</string>
+    <string-array name="voice_service">
+        <item>Замена занесена в журнал</item>
+        <item>Механизм обслужен</item>
+        <item>Деталь сменена, журнал заполнен</item>
+    </string-array>
+    <string-array name="voice_car_added">
+        <item>Новый экипаж в гараже</item>
+        <item>Экипаж принят в гараж</item>
+    </string-array>
+    <string-array name="voice_mileage">
+        <item>Пробег записан</item>
+        <item>Одометр сверен</item>
+        <item>Вёрсты учтены</item>
+    </string-array>
+    <string-array name="voice_sync_ok">
+        <item>Гараж сверен</item>
+        <item>Депеша доставлена</item>
+    </string-array>
+    <string-array name="voice_sync_error">
+        <item>Связь с гаражом прервана</item>
+        <item>Депеша не дошла</item>
+    </string-array>
+    <string-array name="voice_overdue">
+        <item>Внимание: %1$s — пора менять</item>
+        <item>Механик напоминает: %1$s — пора менять</item>
+    </string-array>
+    <string-array name="voice_test">
+        <item>Механик на месте</item>
+        <item>Пар поднят, механик слушает</item>
+    </string-array>
 </resources>
