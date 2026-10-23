@@ -100,6 +100,12 @@ val testLauncher = extensions.getByType<JavaToolchainService>().launcherFor {
 // Скриншоты экранов (тесты *ScreenshotTest) рисуются отдельным запуском: ./gradlew -Pscreenshots testDebugUnitTest
 tasks.withType<Test>().configureEach {
     javaLauncher.set(testLauncher)
+    // Robolectric подменяет работу с FileDescriptor через внутренние классы JDK — их нужно открыть.
+    jvmArgs(
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+    )
     if (providers.gradleProperty("screenshots").isPresent) {
         filter { includeTestsMatching("*ScreenshotTest") }
         systemProperty("roborazzi.test.record", "true")

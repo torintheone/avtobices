@@ -14,6 +14,11 @@ on:
 permissions:
   contents: write
 
+# bash с pipefail: падение gradlew не теряется за «| tee gradle.log».
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
@@ -63,7 +68,8 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           if [ ! -f app/google-services.json ] && [ -n "$GOOGLE_SERVICES_JSON" ]; then
-            if printf '%s' "$GOOGLE_SERVICES_JSON" | head -c 1 | grep -q '{'; then
+            FIRST=$(printf '%s' "$GOOGLE_SERVICES_JSON" | tr -d '[:space:]' | cut -c1)
+            if [ "$FIRST" = "{" ]; then
               printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
             else
               printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json

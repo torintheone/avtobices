@@ -10,6 +10,11 @@ on:
 permissions:
   contents: write
 
+# bash с pipefail: падение gradlew не теряется за «| tee gradle.log».
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: screenshots-${{ github.ref }}
   cancel-in-progress: true
