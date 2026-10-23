@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -29,6 +30,9 @@ import app.steamgarage.ui.components.BrassBottomBar
 import app.steamgarage.ui.components.NavTab
 import app.steamgarage.ui.components.SteamBackground
 import app.steamgarage.ui.components.SteamTimePickerDialog
+import app.steamgarage.ui.components.SyncIndicator
+import app.steamgarage.ui.components.SyncLamp
+import app.steamgarage.ui.screens.LocalTabBarActions
 import app.steamgarage.ui.components.TextureCache
 import app.steamgarage.ui.screens.ShowcaseScreen
 import app.steamgarage.ui.screens.car.CarScreen
@@ -117,7 +121,9 @@ class AppScreenshotTest {
 
     @Test
     fun garageDark() = capture("01_garage_dark") {
-        WithTabs(0) { GarageScreen(cars(), it, onOpenCar = {}, onAddCar = {}) }
+        CompositionLocalProvider(LocalTabBarActions provides { SyncIndicator(SyncLamp.IDLE) {} }) {
+            WithTabs(0) { GarageScreen(cars(), it, onOpenCar = {}, onAddCar = {}) }
+        }
     }
 
     @Test

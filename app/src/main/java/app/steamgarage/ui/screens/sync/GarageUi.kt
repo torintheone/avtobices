@@ -41,9 +41,10 @@ import app.steamgarage.ui.theme.Steam
 /** Ссылка-приглашение: её содержит QR-код, по ней приложение открывается с кодом. */
 fun joinLink(code: String): String = "steamgarage://join?code=$code"
 
+/** [joining] — ошибка при вступлении: тогда «нет сети» значит «попробуйте ещё раз», а не «отправим позже». */
 @StringRes
-fun syncErrorText(error: SyncError): Int = when (error) {
-    SyncError.OFFLINE -> R.string.sync_error_offline
+fun syncErrorText(error: SyncError, joining: Boolean = false): Int = when (error) {
+    SyncError.OFFLINE -> if (joining) R.string.sync_error_offline_join else R.string.sync_error_offline
     SyncError.DENIED -> R.string.sync_error_denied
     SyncError.NO_DATABASE -> R.string.sync_error_no_database
     SyncError.AUTH -> R.string.sync_error_auth
@@ -109,7 +110,7 @@ fun GaragePanel(state: GarageUiState, actions: GarageActions) {
                     onClick = { actions.onJoin(code) },
                     enabled = code.isNotBlank() && !busy,
                 )
-                if (error != null) ErrorLine(error)
+                if (error != null) ErrorLine(error, joining = true)
             }
             else -> InGarage(state, state.garage, actions, error, palette.textSecondary)
         }
@@ -183,8 +184,8 @@ private fun InGarage(
 }
 
 @Composable
-private fun ErrorLine(error: SyncError) {
-    Text(stringResource(syncErrorText(error)), style = MaterialTheme.typography.bodyMedium, color = Steam.palette.errorText)
+private fun ErrorLine(error: SyncError, joining: Boolean = false) {
+    Text(stringResource(syncErrorText(error, joining)), style = MaterialTheme.typography.bodyMedium, color = Steam.palette.errorText)
 }
 
 @Composable
@@ -253,7 +254,7 @@ fun JoinGarageDialog(
                 )
                 if (error != null) {
                     Spacer(Modifier.height(6.dp))
-                    ErrorLine(error)
+                    ErrorLine(error, joining = true)
                 }
             }
         }
