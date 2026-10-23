@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Категория «Шины»: колесо с протектором. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M2.5,12A9.5,9.5 0,1 1,21.5,12A9.5,9.5 0,1 1,2.5,12Z M6,12A6,6 0,1 1,18,12A6,6 0,1 1,6,12Z M20,12.9L21.6,12.9L21.6,11.1L20,11.1Z M17.94,17.43L19.24,18.37L20.3,16.91L19,15.97Z M13.62,19.89L14.11,21.41L15.82,20.85L15.33,19.33Z M8.67,19.33L8.18,20.85L9.89,21.41L10.38,19.89Z M5,15.97L3.7,16.91L4.76,18.37L6.06,17.43Z M4,11.1L2.4,11.1L2.4,12.9L4,12.9Z M6.06,6.57L4.76,5.63L3.7,7.09L5,8.03Z M10.38,4.11L9.89,2.59L8.18,3.15L8.67,4.67Z M15.33,4.67L15.82,3.15L14.11,2.59L13.62,4.11Z M19,8.03L20.3,7.09L19.24,5.63L17.94,6.57Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M7.6,12A4.4,4.4 0,1 1,16.4,12A4.4,4.4 0,1 1,7.6,12Z M10.6,12A1.4,1.4 0,1 1,13.4,12A1.4,1.4 0,1 1,10.6,12Z" />
+</vector>

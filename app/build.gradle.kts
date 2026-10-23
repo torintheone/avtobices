@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 // Версия приложения приходит из git-тега: CI передаёт -PappVersion=0.1.0 (тег v0.1.0).
@@ -77,6 +78,28 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    testOptions {
+        unitTests {
+            // Robolectric читает настоящие ресурсы (шрифты, строки) для скриншотов экранов.
+            isIncludeAndroidResources = true
+        }
+    }
+}
+
+// Схемы базы данных сохраняются в репозитории: по ним пишутся миграции будущих версий.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// Скриншоты экранов (тесты *ScreenshotTest) рисуются отдельным запуском: ./gradlew -Pscreenshots testDebugUnitTest
+tasks.withType<Test>().configureEach {
+    if (providers.gradleProperty("screenshots").isPresent) {
+        filter { includeTestsMatching("*ScreenshotTest") }
+        systemProperty("roborazzi.test.record", "true")
+    } else {
+        filter { excludeTestsMatching("*ScreenshotTest") }
+    }
 }
 
 kotlin {
@@ -98,7 +121,17 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.datastore.preferences)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
 }

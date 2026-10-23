@@ -17,9 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-
-/** Выбор темы в настройках: тёмная, дневная («пергаментная») или как в системе. */
-enum class ThemeMode { DARK, LIGHT, SYSTEM }
+import app.steamgarage.data.ThemeMode
 
 val LocalSteamPalette = staticCompositionLocalOf { DarkPalette }
 val LocalSteamText = staticCompositionLocalOf { SteamTextStyles() }

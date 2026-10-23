@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Категория «Жидкости»: капля. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M12,2.5C12,2.5 5.5,10 5.5,14.5A6.5,6.5 0,0 0,18.5 14.5C18.5,10 12,2.5 12,2.5Z M8.4,14.2A3.6,3.6 0,0 0,12 17.8V16.2A2,2 0,0 1,10 14.2Z" />
+</vector>

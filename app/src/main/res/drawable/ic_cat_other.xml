@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Категория «Другое»: шестерня. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M12,4.4L13.25,2.08L15.42,2.6L15.47,5.24L16.89,6.18L19.34,5.21L20.66,7L19.01,9.05L19.48,10.68L21.99,11.51L21.85,13.74L19.26,14.25L18.58,15.8L19.97,18.05L18.43,19.66L16.12,18.39L14.6,19.14L14.22,21.75L12,22L11.05,19.54L9.4,19.14L7.43,20.89L5.57,19.66L6.42,17.16L5.42,15.8L2.78,15.88L2.15,13.74L4.41,12.37L4.52,10.68L2.45,9.04L3.34,7L5.95,7.41L7.11,6.18L6.58,3.59L8.58,2.6L10.32,4.59Z M8.8,12A3.2,3.2 0,1 1,15.2,12A3.2,3.2 0,1 1,8.8,12Z" />
+</vector>

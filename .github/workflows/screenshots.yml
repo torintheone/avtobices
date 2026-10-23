@@ -1,0 +1,55 @@
+name: Скриншоты экранов
+
+# Рисует экраны с тестовыми данными (Robolectric + Roborazzi) и выкладывает PNG
+# в служебный пререлиз ci-screenshots — по ним проверяется внешний вид без телефона.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: false
+
+      - name: Нарисовать экраны
+        run: ./gradlew --stacktrace -Pscreenshots testDebugUnitTest
+
+      - name: Отчёт тестов
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshot-test-reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+      - name: Выложить в пререлиз ci-screenshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=ci-screenshots
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
+              --title "Служебное: скриншоты экранов" \
+              --notes "Скриншоты экранов, нарисованные при сборке для проверки внешнего вида. Устанавливать отсюда нечего — APK лежат в обычных релизах."
+          fi
+          echo "$GITHUB_SHA" > commit.txt
+          gh release upload "$TAG" app/build/outputs/roborazzi/*.png commit.txt --clobber

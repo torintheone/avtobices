@@ -48,6 +48,8 @@ data class SteamPalette(
     val iron: Color,
     /** Утопленная плашка выбранной вкладки на латунной панели (подпись — [brassLight]). */
     val navSelected: Color,
+    /** Текст ошибки в полях ввода (эмаль слишком тёмная для текста на тёмном дереве). */
+    val errorText: Color,
 )
 
 val DarkPalette = SteamPalette(
@@ -78,6 +80,7 @@ val DarkPalette = SteamPalette(
     odometerDigit = Color(0xFFEDE3C8),
     iron = Color(0xFF26211E),
     navSelected = Color(0xFF3D3414),
+    errorText = Color(0xFFF28B82),
 )
 
 val LightPalette = SteamPalette(
@@ -108,4 +111,5 @@ val LightPalette = SteamPalette(
     odometerDigit = Color(0xFFEDE3C8),
     iron = Color(0xFF2E2824),
     navSelected = Color(0xFF3D3414),
+    errorText = Color(0xFF8E1216),
 )

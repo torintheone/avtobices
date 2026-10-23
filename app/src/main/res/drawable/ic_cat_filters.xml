@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Категория «Фильтры»: рамка фильтра с гофрой. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M2.5,5H21.5V19H2.5Z M4.3,6.8H19.7V17.2H4.3Z" />
+    <path
+        android:pathData="M5.6,11.2L6.4,8.2L8.4,15.8L10.4,8.2L12.4,15.8L14.4,8.2L16.4,15.8L18.4,8.2"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

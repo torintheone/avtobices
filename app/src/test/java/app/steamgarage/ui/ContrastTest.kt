@@ -37,6 +37,8 @@ class ContrastTest {
             Triple("бейдж «Нет данных»", p.onNoData, p.noData),
             Triple("цифры на циферблате", p.gaugeInk, p.gaugeFace),
             Triple("цифры одометра", p.odometerDigit, p.odometerWindow),
+            Triple("ошибка на фоне", p.errorText, p.background),
+            Triple("ошибка на карточке", p.errorText, p.surface),
         )
         val failures = pairs.mapNotNull { (name, fg, bg) ->
             val ratio = contrast(fg, bg)

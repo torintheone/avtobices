@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.steamgarage.R
+import app.steamgarage.data.ThemeMode
 import app.steamgarage.domain.ItemStatus
 import app.steamgarage.ui.components.BrassPlate
 import app.steamgarage.ui.components.EngravedText
@@ -46,7 +47,6 @@ import app.steamgarage.ui.components.SteamSwitchRow
 import app.steamgarage.ui.components.ValveButton
 import app.steamgarage.ui.components.statusLabel
 import app.steamgarage.ui.theme.Steam
-import app.steamgarage.ui.theme.ThemeMode
 
 /** Витрина механизмов (этап 0): все базовые компоненты с тестовыми данными. */
 @Composable

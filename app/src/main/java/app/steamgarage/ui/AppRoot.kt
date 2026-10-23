@@ -4,83 +4,79 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.LocalActivity
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import app.steamgarage.AppContainer
 import app.steamgarage.R
+import app.steamgarage.appContainer
+import app.steamgarage.data.ThemeMode
 import app.steamgarage.ui.components.BrassBottomBar
 import app.steamgarage.ui.components.NavTab
-import app.steamgarage.ui.components.SectionTitle
 import app.steamgarage.ui.components.SteamBackground
-import app.steamgarage.ui.components.SteamGears
-import app.steamgarage.ui.components.SteamPanel
 import app.steamgarage.ui.components.SteamTopBar
+import app.steamgarage.ui.navigation.AboutRoute
+import app.steamgarage.ui.navigation.CarEditRoute
+import app.steamgarage.ui.navigation.CarRoute
+import app.steamgarage.ui.navigation.DueRoute
+import app.steamgarage.ui.navigation.GarageRoute
+import app.steamgarage.ui.navigation.ItemEditRoute
+import app.steamgarage.ui.navigation.ItemRoute
+import app.steamgarage.ui.navigation.JournalRoute
+import app.steamgarage.ui.navigation.OnboardingRoute
+import app.steamgarage.ui.navigation.SettingsRoute
+import app.steamgarage.ui.navigation.ShowcaseRoute
+import app.steamgarage.ui.navigation.TemplateRoute
 import app.steamgarage.ui.screens.ShowcaseScreen
-import app.steamgarage.ui.theme.Steam
+import app.steamgarage.ui.screens.about.AboutScreen
+import app.steamgarage.ui.screens.car.CarEditHost
+import app.steamgarage.ui.screens.car.CarHost
+import app.steamgarage.ui.screens.due.DueHost
+import app.steamgarage.ui.screens.garage.GarageHost
+import app.steamgarage.ui.screens.item.ItemEditHost
+import app.steamgarage.ui.screens.item.ItemHost
+import app.steamgarage.ui.screens.journal.JournalHost
+import app.steamgarage.ui.screens.onboarding.OnboardingHost
+import app.steamgarage.ui.screens.settings.SettingsHost
+import app.steamgarage.ui.screens.template.TemplateHost
 import app.steamgarage.ui.theme.SteamTheme
-import app.steamgarage.ui.theme.ThemeMode
 import app.steamgarage.ui.theme.isDarkTheme
+import kotlinx.coroutines.launch
 
-/** Корень интерфейса: тема, фон, нижняя навигация из четырёх вкладок. */
+/** Корень интерфейса: тема из настроек, фон, навигация с нижней панелью из четырёх вкладок. */
 @Composable
 fun AppRoot() {
-    var themeMode by rememberSaveable { mutableStateOf(ThemeMode.DARK) }
+    val container = LocalContext.current.appContainer
+    val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = null)
+    val themeMode = settings?.themeMode ?: ThemeMode.DARK
     SteamTheme(themeMode) {
         SystemBarsEffect(isDarkTheme(themeMode))
         SteamBackground {
-            var tab by rememberSaveable { mutableIntStateOf(0) }
-            val tabs = listOf(
-                NavTab(stringResource(R.string.tab_garage), R.drawable.ic_nav_garage),
-                NavTab(stringResource(R.string.tab_due), R.drawable.ic_nav_due),
-                NavTab(stringResource(R.string.tab_journal), R.drawable.ic_nav_journal),
-                NavTab(stringResource(R.string.tab_settings), R.drawable.ic_nav_settings),
-            )
-            Scaffold(
-                containerColor = Color.Transparent,
-                contentColor = Steam.palette.text,
-                topBar = {
-                    SteamTopBar(
-                        title = if (tab == 0) stringResource(R.string.showcase_title) else tabs[tab].label,
-                    )
-                },
-                bottomBar = {
-                    BrassBottomBar(tabs = tabs, selectedIndex = tab, onSelect = { tab = it })
-                },
-            ) { padding ->
-                when (tab) {
-                    0 -> ShowcaseScreen(padding, themeMode) { themeMode = it }
-                    1 -> StubScreen(padding, stringResource(R.string.stub_due), stage = 2)
-                    2 -> StubScreen(padding, stringResource(R.string.stub_journal), stage = 1)
-                    else -> StageZeroSettings(padding, themeMode) { themeMode = it }
-                }
+            val loaded = settings
+            if (loaded != null) {
+                AppNavigation(startOnboarding = !loaded.onboardingDone, container = container)
             }
         }
     }
@@ -104,79 +100,158 @@ private fun SystemBarsEffect(darkTheme: Boolean) {
     }
 }
 
+private val TabRoutes: List<Any> = listOf(GarageRoute, DueRoute, JournalRoute, SettingsRoute)
+
 @Composable
-private fun StubScreen(contentPadding: PaddingValues, text: String, stage: Int) {
-    val palette = Steam.palette
-    Column(
-        modifier = Modifier
-            .padding(contentPadding)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        SteamPanel(Modifier.fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SteamGears(spinning = false, size = 48.dp)
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = stringResource(R.string.stub_stage, stage),
-                    style = MaterialTheme.typography.titleMedium,
+private fun AppNavigation(startOnboarding: Boolean, container: AppContainer) {
+    val nav = rememberNavController()
+    val start: Any = remember { if (startOnboarding) OnboardingRoute else GarageRoute }
+    val backStack by nav.currentBackStackEntryAsState()
+    val destination = backStack?.destination
+    val selectedTab = when {
+        destination == null -> -1
+        destination.hierarchy.any { it.hasRoute<GarageRoute>() } -> 0
+        destination.hierarchy.any { it.hasRoute<DueRoute>() } -> 1
+        destination.hierarchy.any { it.hasRoute<JournalRoute>() } -> 2
+        destination.hierarchy.any { it.hasRoute<SettingsRoute>() } -> 3
+        else -> -1
+    }
+    val tabs = listOf(
+        NavTab(stringResource(R.string.tab_garage), R.drawable.ic_nav_garage),
+        NavTab(stringResource(R.string.tab_due), R.drawable.ic_nav_due),
+        NavTab(stringResource(R.string.tab_journal), R.drawable.ic_nav_journal),
+        NavTab(stringResource(R.string.tab_settings), R.drawable.ic_nav_settings),
+    )
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0),
+        bottomBar = {
+            if (selectedTab >= 0) {
+                BrassBottomBar(tabs = tabs, selectedIndex = selectedTab, onSelect = { nav.navigateTab(TabRoutes[it]) })
+            }
+        },
+    ) { padding ->
+        NavHost(navController = nav, startDestination = start, modifier = Modifier.fillMaxSize()) {
+            composable<OnboardingRoute> {
+                OnboardingHost(
+                    onAddCar = {
+                        nav.navigate(GarageRoute) { popUpTo<OnboardingRoute> { inclusive = true } }
+                        nav.navigate(CarEditRoute())
+                    },
+                    onSkip = { nav.navigate(GarageRoute) { popUpTo<OnboardingRoute> { inclusive = true } } },
                 )
             }
-            Text(text = text, style = MaterialTheme.typography.bodyMedium, color = palette.textSecondary)
+            composable<GarageRoute> {
+                GarageHost(
+                    chromePadding = padding,
+                    onOpenCar = { nav.navigate(CarRoute(it)) },
+                    onAddCar = { nav.navigate(CarEditRoute()) },
+                )
+            }
+            composable<DueRoute> {
+                DueHost(
+                    chromePadding = padding,
+                    onOpenItem = { nav.navigate(ItemRoute(it)) },
+                    onAddCar = { nav.navigate(CarEditRoute()) },
+                )
+            }
+            composable<JournalRoute> {
+                JournalHost(
+                    chromePadding = padding,
+                    onOpenItem = { nav.navigate(ItemRoute(it)) },
+                    onAddCar = { nav.navigate(CarEditRoute()) },
+                )
+            }
+            composable<SettingsRoute> {
+                SettingsHost(chromePadding = padding, onAbout = { nav.navigate(AboutRoute) })
+            }
+            composable<CarRoute> { entry ->
+                val route = entry.toRoute<CarRoute>()
+                CarHost(
+                    carId = route.carId,
+                    highlightItemId = route.highlightItemId,
+                    action = route.action,
+                    actionItems = route.actionItems,
+                    chromePadding = padding,
+                    onBack = { nav.popBackStack() },
+                    onEditCar = { nav.navigate(CarEditRoute(route.carId)) },
+                    onOpenItem = { nav.navigate(ItemRoute(it)) },
+                    onAddItem = { nav.navigate(ItemEditRoute(route.carId)) },
+                    onAddFromTemplate = { nav.navigate(TemplateRoute(route.carId)) },
+                )
+            }
+            composable<CarEditRoute> { entry ->
+                val route = entry.toRoute<CarEditRoute>()
+                CarEditHost(
+                    carId = route.carId,
+                    chromePadding = padding,
+                    onBack = { nav.popBackStack() },
+                    onCreated = { id -> nav.navigate(TemplateRoute(id)) { popUpTo<CarEditRoute> { inclusive = true } } },
+                    onDeleted = { nav.popBackStack(GarageRoute, inclusive = false) },
+                )
+            }
+            composable<TemplateRoute> { entry ->
+                val route = entry.toRoute<TemplateRoute>()
+                val toCar = {
+                    if (nav.previousBackStackEntry?.destination?.hasRoute<CarRoute>() == true) {
+                        nav.popBackStack()
+                    } else {
+                        nav.navigate(CarRoute(route.carId)) { popUpTo<TemplateRoute> { inclusive = true } }
+                    }
+                    Unit
+                }
+                TemplateHost(carId = route.carId, chromePadding = padding, onBack = toCar, onDone = toCar)
+            }
+            composable<ItemRoute> { entry ->
+                val route = entry.toRoute<ItemRoute>()
+                ItemHost(
+                    itemId = route.itemId,
+                    chromePadding = padding,
+                    onBack = { nav.popBackStack() },
+                    onEdit = { carId -> nav.navigate(ItemEditRoute(carId, route.itemId)) },
+                )
+            }
+            composable<ItemEditRoute> { entry ->
+                val route = entry.toRoute<ItemEditRoute>()
+                ItemEditHost(
+                    carId = route.carId,
+                    itemId = route.itemId,
+                    chromePadding = padding,
+                    onBack = { nav.popBackStack() },
+                    onDeleted = { nav.navigate(CarRoute(route.carId)) { popUpTo<ItemRoute> { inclusive = true } } },
+                )
+            }
+            composable<AboutRoute> {
+                AboutScreen(chromePadding = padding, onBack = { nav.popBackStack() }, onShowcase = { nav.navigate(ShowcaseRoute) })
+            }
+            composable<ShowcaseRoute> {
+                ShowcaseHost(container = container, onBack = { nav.popBackStack() })
+            }
         }
     }
 }
 
-/** Настройки этапа 0: только выбор темы. */
+/** Переход на вкладку: одна копия каждой вкладки, состояние вкладок сохраняется. */
+private fun NavHostController.navigateTab(route: Any) {
+    navigate(route) {
+        popUpTo<GarageRoute> { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
 @Composable
-private fun StageZeroSettings(
-    contentPadding: PaddingValues,
-    themeMode: ThemeMode,
-    onThemeModeChange: (ThemeMode) -> Unit,
-) {
-    val palette = Steam.palette
-    Column(
-        modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .padding(contentPadding)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        SectionTitle(stringResource(R.string.settings_theme))
-        SteamPanel(Modifier.fillMaxWidth().selectableGroup()) {
-            listOf(
-                ThemeMode.DARK to R.string.settings_theme_dark,
-                ThemeMode.LIGHT to R.string.settings_theme_light,
-                ThemeMode.SYSTEM to R.string.settings_theme_system,
-            ).forEach { (mode, label) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 52.dp)
-                        .selectable(
-                            selected = themeMode == mode,
-                            role = Role.RadioButton,
-                            onClick = { onThemeModeChange(mode) },
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = themeMode == mode,
-                        onClick = null,
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = palette.copperLight,
-                            unselectedColor = palette.textSecondary,
-                        ),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
-                }
-            }
+private fun ShowcaseHost(container: AppContainer, onBack: () -> Unit) {
+    val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = null)
+    val scope = rememberCoroutineScope()
+    Column(Modifier.fillMaxSize()) {
+        SteamTopBar(title = stringResource(R.string.showcase_title), onBack = onBack)
+        Box(Modifier.weight(1f)) {
+            ShowcaseScreen(
+                contentPadding = WindowInsets.navigationBars.asPaddingValues(),
+                themeMode = settings?.themeMode ?: ThemeMode.DARK,
+                onThemeModeChange = { mode -> scope.launch { container.settings.setThemeMode(mode) } },
+            )
         }
-        Text(
-            text = stringResource(R.string.stub_settings_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = palette.textSecondary,
-        )
     }
 }

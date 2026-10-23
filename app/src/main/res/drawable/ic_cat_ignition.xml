@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Категория «Зажигание»: свеча. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M10.6,1.8H13.4V4.6H10.6Z M9.6,5.2H14.4L13.7,10.6H10.3Z M7.8,11.2H16.2V14.2H7.8Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M9.4,14.8H14.6V18.6H9.4Z M9.4,15.9H14.6V16.6H9.4Z M9.4,17.3H14.6V18H9.4Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M11.3,18.6H12.7V20.6H15V22H11.3Z" />
+</vector>
