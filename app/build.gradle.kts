@@ -92,6 +92,12 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+// Room в debug и release пишет схему в один и тот же файл. Параллельно один вариант читал файл,
+// который другой ещё дописывал («Expected start of the object '{', but had 'EOF'»), — запускаем по очереди.
+tasks.configureEach {
+    if (name == "kspReleaseKotlin") mustRunAfter("kspDebugKotlin")
+}
+
 // Код компилируется под Java 17, а тесты запускаются на Java 21: Robolectric для Android 16+ требует её.
 val testLauncher = extensions.getByType<JavaToolchainService>().launcherFor {
     languageVersion.set(JavaLanguageVersion.of(21))

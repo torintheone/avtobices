@@ -92,4 +92,11 @@ jobs:
               --notes "Скриншоты экранов, нарисованные при сборке для проверки внешнего вида. Устанавливать отсюда нечего — APK лежат в обычных релизах."
           fi
           echo "$GITHUB_SHA" > commit.txt
-          gh release upload "$TAG" app/build/outputs/roborazzi/*.png commit.txt --clobber
+          # Схема базы данных — чтобы сохранить её в репозитории (по ней пишутся миграции).
+          SCHEMAS=""
+          for f in app/schemas/*/*.json; do
+            [ -f "$f" ] || continue
+            cp "$f" "room-schema-$(basename "$f")"
+            SCHEMAS="$SCHEMAS room-schema-$(basename "$f")"
+          done
+          gh release upload "$TAG" app/build/outputs/roborazzi/*.png commit.txt $SCHEMAS --clobber
