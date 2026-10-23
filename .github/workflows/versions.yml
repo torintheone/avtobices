@@ -1,0 +1,52 @@
+name: Версии библиотек
+
+# Последние стабильные версии библиотек из репозитория Google (Firebase, AndroidX, плагин сборки).
+# Пишет файл versions.txt в служебный пререлиз ci-screenshots — по нему обновляется gradle/libs.versions.toml.
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'gradle/libs.versions.toml'
+      - '.github/workflows/versions.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  versions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Последние версии
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "commit: $GITHUB_SHA"
+            for a in \
+              com/google/firebase/firebase-bom \
+              com/google/firebase/firebase-auth \
+              com/google/firebase/firebase-database \
+              com/google/gms/google-services \
+              androidx/work/work-runtime-ktx \
+              androidx/compose/compose-bom \
+              com/android/tools/build/gradle; do
+              meta=$(curl -sSfL "https://dl.google.com/dl/android/maven2/$a/maven-metadata.xml" || true)
+              stable=$(printf '%s' "$meta" | grep -oE '<version>[^<]+</version>' | sed -E 's#</?version>##g' \
+                | grep -viE 'alpha|beta|rc|dev|snapshot' | tail -n 3 | tr '\n' ' ')
+              echo "$a: $stable"
+            done
+          } > versions.txt
+          cat versions.txt
+          TAG=ci-screenshots
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+              --title "Служебное: скриншоты экранов" \
+              --notes "Служебные файлы сборки. Устанавливать отсюда нечего — APK лежат в обычных релизах."
+          fi
+          gh release upload "$TAG" versions.txt --repo "$GITHUB_REPOSITORY" --clobber
