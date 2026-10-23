@@ -115,6 +115,7 @@ fun SteamDialog(
             Column(
                 modifier = Modifier
                     .weight(1f, fill = false)
+                    .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
             ) {
                 content()

@@ -1,6 +1,7 @@
 package app.steamgarage.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -224,16 +225,13 @@ private fun NotificationsPanel(settings: Settings, n: NotificationSettings) {
             BrassButton(text = stringResource(R.string.settings_notifications_allow), onClick = n.onOpenSystemNotifications)
             Spacer(Modifier.height(4.dp))
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.settings_check_time, Format.time(settings.checkHour, settings.checkMinute)),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f),
-            )
-            Spacer(Modifier.width(8.dp))
-            ValveButton(text = stringResource(R.string.settings_check_time_change), onClick = { timeDialog = true })
-        }
+        Text(
+            text = stringResource(R.string.settings_check_time, Format.time(settings.checkHour, settings.checkMinute)),
+            style = MaterialTheme.typography.bodyLarge,
+        )
         Text(stringResource(R.string.settings_check_time_hint), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+        ValveButton(text = stringResource(R.string.settings_check_time_change), onClick = { timeDialog = true })
+        Spacer(Modifier.height(4.dp))
         NumberField(
             value = reminder,
             onValueChange = { reminder = it },
@@ -246,19 +244,21 @@ private fun NotificationsPanel(settings: Settings, n: NotificationSettings) {
         if (reminderDays != null && reminderDays != settings.mileageReminderDays) {
             BrassButton(text = stringResource(R.string.action_save), onClick = { n.onMileageReminderDays(reminderDays) })
         }
-        ValveButton(
-            text = stringResource(R.string.settings_check_now),
-            onClick = {
-                n.onCheckNow()
-                checkStarted = true
-            },
-        )
-        if (checkStarted) {
-            Text(stringResource(R.string.settings_check_now_done), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
-        }
-        ValveButton(text = stringResource(R.string.settings_system_notifications), onClick = n.onOpenSystemNotifications)
-        if (n.showAutostart) {
-            ValveButton(text = stringResource(R.string.settings_autostart), onClick = n.onOpenAppDetails)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            ValveButton(
+                text = stringResource(R.string.settings_check_now),
+                onClick = {
+                    n.onCheckNow()
+                    checkStarted = true
+                },
+            )
+            if (checkStarted) {
+                Text(stringResource(R.string.settings_check_now_done), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
+            }
+            ValveButton(text = stringResource(R.string.settings_system_notifications), onClick = n.onOpenSystemNotifications)
+            if (n.showAutostart) {
+                ValveButton(text = stringResource(R.string.settings_autostart), onClick = n.onOpenAppDetails)
+            }
         }
     }
     if (timeDialog) {
