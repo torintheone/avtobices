@@ -109,11 +109,15 @@ fun ServiceSheet(
     val costError = if (costText.isNotBlank() && Format.parseMoney(costText) == null) stringResource(R.string.service_error_cost) else null
     val selected = if (batch) items.filter { checked[it.item.id] == true } else listOfNotNull(singleItem)
     val nothingSelected = showErrors && selected.isEmpty()
+    val badCostText = stringResource(R.string.service_error_cost)
+    fun lineCostError(itemId: String): String? =
+        costs[itemId].orEmpty().takeIf { it.isNotBlank() && Format.parseMoney(it) == null }?.let { badCostText }
+    val batchCostInvalid = batch && selected.any { lineCostError(it.item.id) != null }
 
     fun submit() {
         showErrors = true
         val kmValue = km ?: return
-        if (kmValue <= 0 || selected.isEmpty() || costError != null) return
+        if (kmValue <= 0 || selected.isEmpty() || costError != null || batchCostInvalid) return
         val lines = if (batch) {
             selected.map { s ->
                 ServiceLine(s.item.id, costs[s.item.id]?.let { Format.parseMoney(it) }, s.item.defaultPart)
@@ -175,6 +179,7 @@ fun ServiceSheet(
                             value = costs[s.item.id].orEmpty(),
                             onValueChange = { costs[s.item.id] = it },
                             label = stringResource(R.string.service_cost_for, s.item.name),
+                            errorText = lineCostError(s.item.id),
                             modifier = Modifier.padding(start = 48.dp),
                         )
                     }

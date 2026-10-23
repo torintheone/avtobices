@@ -20,11 +20,13 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import app.steamgarage.ui.Format
 import app.steamgarage.ui.theme.Steam
 
 /**
  * Цифры в окошках барабанов, как на механическом одометре.
  * Пробел в [value] даёт промежуток между группами разрядов: «85 247».
+ * [alarm] — барабаны красной эмали: так показывается превышение срока.
  */
 @Composable
 fun OdometerDisplay(
@@ -32,13 +34,16 @@ fun OdometerDisplay(
     modifier: Modifier = Modifier,
     style: TextStyle = Steam.text.odometerSmall,
     contentDescription: String = value,
+    alarm: Boolean = false,
 ) {
     val palette = Steam.palette
+    val window = if (alarm) palette.overdue else palette.odometerWindow
+    val digit = if (alarm) palette.onOverdue else palette.odometerDigit
     val drum = Brush.verticalGradient(
         0.00f to Color.Black,
-        0.18f to palette.odometerWindow,
-        0.50f to lerp(palette.odometerWindow, Color.White, 0.10f),
-        0.82f to palette.odometerWindow,
+        0.18f to window,
+        0.50f to lerp(window, Color.White, 0.10f),
+        0.82f to window,
         1.00f to Color.Black,
     )
     Row(
@@ -51,7 +56,7 @@ fun OdometerDisplay(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         value.forEach { ch ->
-            if (ch == ' ') {
+            if (ch == ' ' || ch == Format.GROUP_SPACE) {
                 Spacer(Modifier.width(3.dp))
             } else {
                 Box(
@@ -60,7 +65,7 @@ fun OdometerDisplay(
                         .padding(horizontal = 2.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(text = ch.toString(), style = style, color = palette.odometerDigit)
+                    Text(text = ch.toString(), style = style, color = digit)
                 }
             }
         }

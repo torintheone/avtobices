@@ -23,7 +23,8 @@ fun gaugeReadingFor(state: ItemState): GaugeReading {
                 wear = state.wear,
                 warnFraction = state.warnFraction,
                 readout = Format.kmAbs(left),
-                unit = stringResource(if (left > 0) R.string.unit_km_left else R.string.unit_km_over),
+                unit = stringResource(R.string.unit_km),
+                alarm = left <= 0,
             )
         }
         Metric.DAYS, null -> {
@@ -33,7 +34,8 @@ fun gaugeReadingFor(state: ItemState): GaugeReading {
                 wear = state.wear,
                 warnFraction = state.warnFraction,
                 readout = Format.kmAbs(left),
-                unit = stringResource(if (left > 0) R.string.unit_days_left else R.string.unit_days_over),
+                unit = stringResource(R.string.unit_days),
+                alarm = left <= 0,
             )
         }
     }

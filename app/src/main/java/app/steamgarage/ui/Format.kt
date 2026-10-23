@@ -8,7 +8,10 @@ import kotlin.math.abs
 object Format {
     private val dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
-    /** 85247 → «85 247» (обычные пробелы: одометр рисует по ним промежутки между разрядами). */
+    /** Неразрывный пробел между разрядами: число не переносится на две строки посередине. */
+    const val GROUP_SPACE = '\u00A0'
+
+    /** 85247 → «85 247» (одометр рисует по пробелам промежутки между разрядами). */
     fun km(value: Int): String = group(abs(value).toString()).let { if (value < 0) "−$it" else it }
 
     /** Модуль числа с разрядами — для «превышено на 350 км». */
@@ -48,5 +51,5 @@ object Format {
     }
 
     private fun group(digits: String): String =
-        digits.reversed().chunked(3).joinToString(" ").reversed()
+        digits.reversed().chunked(3).joinToString(GROUP_SPACE.toString()).reversed()
 }

@@ -112,19 +112,19 @@ fun ShowcaseScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             SampleGaugeCard(
                 name = stringResource(R.string.sample_engine_oil),
-                reading = GaugeReading(ItemStatus.SOON, 0.94f, 0.1f, "600", stringResource(R.string.unit_km_left)),
+                reading = GaugeReading(ItemStatus.SOON, 0.94f, 0.1f, "600", stringResource(R.string.unit_km)),
                 modifier = Modifier.weight(1f),
             )
             SampleGaugeCard(
                 name = stringResource(R.string.sample_cabin_filter),
-                reading = GaugeReading(ItemStatus.OK, 0.35f, 0.1f, "9 800", stringResource(R.string.unit_km_left)),
+                reading = GaugeReading(ItemStatus.OK, 0.35f, 0.1f, "9 800", stringResource(R.string.unit_km)),
                 modifier = Modifier.weight(1f),
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             SampleGaugeCard(
                 name = stringResource(R.string.sample_brake_fluid),
-                reading = GaugeReading(ItemStatus.OVERDUE, 1.08f, 0.04f, "58", stringResource(R.string.unit_days_over)),
+                reading = GaugeReading(ItemStatus.OVERDUE, 1.08f, 0.04f, "58", stringResource(R.string.unit_days), alarm = true),
                 modifier = Modifier.weight(1f),
             )
             SampleGaugeCard(

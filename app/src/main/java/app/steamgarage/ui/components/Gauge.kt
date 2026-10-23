@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +25,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -57,8 +57,10 @@ data class GaugeReading(
     val warnFraction: Float = 0.1f,
     /** Остаток цифрами одометра, например «1 200» или «350»; null — без цифр. */
     val readout: String? = null,
-    /** Подпись под цифрами: «км осталось», «дн. просрочено» и т. п. */
+    /** Единица под цифрами — коротко, чтобы уместилась между упорами: «км», «дн.», «%». */
     val unit: String? = null,
+    /** Срок превышен: цифры на барабанах красной эмали. */
+    val alarm: Boolean = false,
 )
 
 /** Шкала размечена до 125 % интервала: последняя четверть — красная зона. */
@@ -68,6 +70,9 @@ private const val SWEEP = 270f
 
 /** Положение стрелки «на упоре» — когда данных нет. */
 private const val REST = -0.035f
+
+/** Верх окошка с цифрами — доля размера манометра: чуть ниже латунной оси стрелки (её край — 0,55). */
+private const val READOUT_TOP = 0.565f
 
 /**
  * Манометр: круглая шкала с рисками и тремя цветными зонами, стрелка на пружине.
@@ -108,7 +113,7 @@ fun SteamGauge(
     } else {
         Modifier
     }
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .aspectRatio(1f)
             .then(semanticsModifier),
@@ -119,8 +124,11 @@ fun SteamGauge(
             drawNeedle(needle.value + tremble * 0.008f, palette)
         }
         if (!compact) {
+            // Окошко с цифрами — сразу под осью стрелки, подпись — в просвете между упорами.
             Column(
-                modifier = Modifier.align(BiasAlignment(0f, 0.62f)),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = maxWidth * READOUT_TOP),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (reading.status == ItemStatus.NO_DATA) {
@@ -133,13 +141,14 @@ fun SteamGauge(
                         EngravedText(text = "?", style = readoutStyle)
                     }
                 } else if (reading.readout != null) {
-                    OdometerDisplay(reading.readout, style = readoutStyle)
+                    OdometerDisplay(reading.readout, style = readoutStyle, alarm = reading.alarm)
                 }
-                if (reading.unit != null) {
+                if (reading.unit != null && reading.status != ItemStatus.NO_DATA) {
                     Text(
                         text = reading.unit,
                         style = MaterialTheme.typography.labelSmall,
                         color = palette.gaugeInk,
+                        maxLines = 1,
                     )
                 }
             }

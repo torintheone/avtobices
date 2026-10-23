@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +39,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import app.steamgarage.R
 import app.steamgarage.ui.theme.Steam
 
@@ -100,8 +102,14 @@ fun SteamDialog(
     buttons: @Composable RowScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        SteamPanel(Modifier.fillMaxWidth()) {
+    // Ширину задаём сами: стандартная ширина диалога на разных телефонах то впритык к краям, то слишком узкая.
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        SteamPanel(
+            Modifier
+                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .widthIn(max = 560.dp)
+                .fillMaxWidth(),
+        ) {
             Text(title, style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(10.dp))
             Column(
