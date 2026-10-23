@@ -5,6 +5,12 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Firebase подключается, только если есть app/google-services.json (кладёт сборка из секрета GOOGLE_SERVICES_JSON).
+// Без него приложение собирается и работает, а синхронизация показывается как «не настроена».
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.google.services.get().pluginId)
+}
+
 // Версия приложения приходит из git-тега: CI передаёт -PappVersion=0.1.0 (тег v0.1.0).
 // Без тега (локальная сборка, обычный push) — 0.0.0-dev.
 val appVersion: String = providers.gradleProperty("appVersion").orNull
@@ -146,6 +152,11 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.zxing.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 

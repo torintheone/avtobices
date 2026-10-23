@@ -41,24 +41,31 @@ import app.steamgarage.domain.ItemStatus
 import app.steamgarage.ui.theme.Steam
 import kotlinx.coroutines.launch
 
-/** Первый запуск: имя на этом устройстве и первый шаг — машина (или вход в гараж, когда появится синхронизация). */
+/** Первый запуск: имя на этом устройстве и первый шаг — своя машина или вступление в общий гараж. */
 @Composable
-fun OnboardingHost(onAddCar: () -> Unit, onSkip: () -> Unit) {
+fun OnboardingHost(canJoin: Boolean, onAddCar: () -> Unit, onSkip: () -> Unit, onJoin: () -> Unit) {
     val container = LocalContext.current.appContainer
     val scope = rememberCoroutineScope()
+    fun finish(name: String, next: () -> Unit) {
+        scope.launch {
+            container.settings.setDeviceName(name)
+            container.settings.setOnboardingDone()
+            next()
+        }
+    }
     OnboardingScreen(
-        onContinue = { name, addCar ->
-            scope.launch {
-                container.settings.setDeviceName(name)
-                container.settings.setOnboardingDone()
-                if (addCar) onAddCar() else onSkip()
-            }
-        },
+        onContinue = { name, addCar -> finish(name, if (addCar) onAddCar else onSkip) },
+        canJoin = canJoin,
+        onJoin = { name -> finish(name, onJoin) },
     )
 }
 
 @Composable
-fun OnboardingScreen(onContinue: (name: String, addCar: Boolean) -> Unit) {
+fun OnboardingScreen(
+    onContinue: (name: String, addCar: Boolean) -> Unit,
+    canJoin: Boolean = false,
+    onJoin: (name: String) -> Unit = {},
+) {
     val palette = Steam.palette
     var name by rememberSaveable { mutableStateOf("") }
     Column(
@@ -106,6 +113,9 @@ fun OnboardingScreen(onContinue: (name: String, addCar: Boolean) -> Unit) {
             onPull = { onContinue(name, true) },
             modifier = Modifier.fillMaxWidth(),
         )
+        if (canJoin) {
+            ValveButton(text = stringResource(R.string.onboarding_join), onClick = { onJoin(name) })
+        }
         ValveButton(text = stringResource(R.string.onboarding_skip), onClick = { onContinue(name, false) })
     }
 }

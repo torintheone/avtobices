@@ -186,6 +186,23 @@ class GarageRepository(
         notifyChange(car.garageId)
     }
 
+    /**
+     * «Общая» ([garageId] — код гаража) или «Личная» (null): машина переезжает вместе со всеми записями.
+     * Отметки времени не меняются: если в гараже есть более свежие версии тех же записей, при сверке победят они.
+     */
+    suspend fun setCarGarage(carId: String, garageId: String?) {
+        val car = cars.get(carId) ?: return
+        if (car.garageId == garageId) return
+        val shared = garageId != null
+        db.withTransaction {
+            cars.upsert(car.copy(garageId = garageId, dirty = shared))
+            items.upsertAll(items.byCar(carId).map { it.copy(garageId = garageId, dirty = shared) })
+            services.upsertAll(services.byCar(carId).map { it.copy(garageId = garageId, dirty = shared) })
+            mileage.upsertAll(mileage.byCar(carId).map { it.copy(garageId = garageId, dirty = shared) })
+        }
+        notifyChange(garageId)
+    }
+
     // ── Расходники ─────────────────────────────────────────────────────────
 
     /**

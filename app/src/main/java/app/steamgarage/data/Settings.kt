@@ -129,6 +129,12 @@ class SettingsRepository(context: Context) {
         it[Keys.hiddenSharedCars] = it[Keys.hiddenSharedCars].orEmpty() + carId
     }
 
+    suspend fun unhideSharedCar(carId: String) = edit {
+        it[Keys.hiddenSharedCars] = it[Keys.hiddenSharedCars].orEmpty() - carId
+    }
+
+    suspend fun clearHiddenSharedCars() = edit { it.remove(Keys.hiddenSharedCars) }
+
     suspend fun setSoundEnabled(enabled: Boolean) = edit { it[Keys.soundEnabled] = enabled }
     suspend fun setSoundVolume(volume: Float) = edit { it[Keys.soundVolume] = volume.coerceIn(0f, 1f) }
     suspend fun setSoundInSilent(allowed: Boolean) = edit { it[Keys.soundInSilent] = allowed }

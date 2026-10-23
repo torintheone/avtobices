@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -44,6 +46,14 @@ import app.steamgarage.ui.screens.notify.NotificationPermissionDialog
 import app.steamgarage.ui.screens.settings.NotificationSettings
 import app.steamgarage.ui.screens.settings.SettingsScreen
 import app.steamgarage.ui.screens.voice.VoiceMissingDialog
+import app.steamgarage.ui.screens.sync.GarageActions
+import app.steamgarage.ui.screens.sync.GaragePanel
+import app.steamgarage.ui.screens.sync.GarageUiState
+import app.steamgarage.ui.screens.sync.JoinGarageDialog
+import app.steamgarage.data.db.GarageEntity
+import app.steamgarage.data.sync.GarageMember
+import app.steamgarage.data.sync.SyncError
+import app.steamgarage.data.sync.SyncStatus
 import app.steamgarage.ui.theme.SteamTheme
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -130,6 +140,7 @@ class AppScreenshotTest {
             onUpdateMileage = {},
             onBatchService = {},
             onSaveTemplate = {},
+            garageCode = "K7QM2XRA5BWDHJNP0TV9",
         )
     }
 
@@ -184,6 +195,7 @@ class AppScreenshotTest {
                     cars = Samples.snapshot(today).cars,
                     showAutostart = true,
                 ),
+                garage = GarageUiState(configured = true, status = SyncStatus.NoGarage),
             )
         }
     }
@@ -230,6 +242,39 @@ class AppScreenshotTest {
     @Test
     fun voiceMissingDialogLight() = capture("14_voice_missing_light", dark = false, screen = true) {
         VoiceMissingDialog(onInstall = {}, onTurnOff = {}, onDismiss = {})
+    }
+
+    @Test
+    @Config(qualifiers = "w400dp-h1300dp-hdpi")
+    fun garageSettingsDark() = capture("15_garage_settings_dark") {
+        Column(Modifier.padding(16.dp)) {
+            GaragePanel(
+                state = GarageUiState(
+                    configured = true,
+                    garage = GarageEntity(code = "K7QM2XRA5BWDHJNP0TV9", name = "", joinedAt = 0),
+                    status = SyncStatus.Idle,
+                    members = listOf(GarageMember("u1", "Папа", 1), GarageMember("u2", "Мама", 2), GarageMember("u3", "", 3)),
+                    myUid = "u1",
+                    lastSyncAt = 1_792_740_000_000,
+                    lastReceived = 3,
+                    lastSent = 1,
+                ),
+                actions = GarageActions(),
+            )
+        }
+    }
+
+    @Test
+    fun joinDialogLight() = capture("16_join_dialog_light", dark = false, screen = true) {
+        JoinGarageDialog(
+            initialCode = "K7QM2XRA5BWDHJNP0TV9",
+            busy = false,
+            error = SyncError.OFFLINE,
+            configured = true,
+            alreadyInGarage = false,
+            onJoin = {},
+            onDismiss = {},
+        )
     }
 }
 

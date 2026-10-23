@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,9 @@ inline fun <reified VM : ViewModel> steamViewModel(
     return viewModel(key = key) { create(container) }
 }
 
+/** Кнопки верхней панели всех вкладок — рычаг и шестерня синхронизации. Задаёт навигация приложения. */
+val LocalTabBarActions = staticCompositionLocalOf<@Composable RowScope.() -> Unit> { {} }
+
 /**
  * Каркас экрана: верхняя панель и прокручиваемое содержимое.
  * [chromePadding] — отступ снизу под нижнюю навигацию (если она видна на этом экране).
@@ -50,7 +54,15 @@ fun SteamScreen(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier.fillMaxSize()) {
-        SteamTopBar(title = title, onBack = onBack, actions = actions)
+        val tabActions = LocalTabBarActions.current
+        SteamTopBar(
+            title = title,
+            onBack = onBack,
+            actions = {
+                if (hasBottomBar) tabActions()
+                actions()
+            },
+        )
         Column(
             modifier = Modifier
                 .weight(1f)

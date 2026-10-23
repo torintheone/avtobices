@@ -247,7 +247,6 @@
     <string name="settings_threshold_reset">Вернуть по умолчанию</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_about_open">О приложении и лицензии</string>
-    <string name="settings_more_soon">Общий гараж для нескольких телефонов появится в следующей версии.</string>
     <string name="settings_sound_toggle">Звуки механизмов</string>
     <string name="settings_voice_toggle">Голос механика</string>
     <string name="showcase_toggle_demo">Здесь только для показа — настоящий переключатель в настройках</string>
@@ -405,4 +404,54 @@
         <item>Механик на месте</item>
         <item>Пар поднят, механик слушает</item>
     </string-array>
+
+    <!-- Общий гараж и синхронизация (этап 4) -->
+    <string name="settings_garage">Общий гараж</string>
+    <string name="garage_not_configured">Синхронизация не настроена: в этой сборке нет конфига Firebase. Как его добавить — в README репозитория, раздел «Firebase». Без синхронизации приложение работает полностью.</string>
+    <string name="garage_intro">В общем гараже машины видят и обновляют все участники — например, вся семья. Личные машины остаются только на этом телефоне.</string>
+    <string name="garage_create">Создать гараж</string>
+    <string name="garage_join">Вступить в гараж</string>
+    <string name="garage_code_label">Код гаража</string>
+    <string name="garage_join_button">Вступить</string>
+    <string name="garage_code_title">Код гаража</string>
+    <string name="garage_share">Поделиться кодом</string>
+    <string name="garage_share_text">Вступайте в мой гараж в приложении «Паровой гараж». Код: %1$s. Или откройте ссылку: %2$s</string>
+    <string name="garage_share_chooser">Отправить код гаража</string>
+    <string name="garage_qr_description">QR-код со ссылкой для вступления в гараж</string>
+    <string name="garage_qr_hint">Отсканируйте камерой другого телефона — откроется приложение с этим кодом.</string>
+    <string name="garage_members">Участники</string>
+    <string name="garage_member_unnamed">Без имени</string>
+    <string name="garage_member_you">%1$s (этот телефон)</string>
+    <string name="garage_last_sync">Последняя сверка: %1$s · получено %2$d, отправлено %3$d</string>
+    <string name="garage_never_synced">Сверки ещё не было</string>
+    <string name="garage_sync_now">Синхронизировать</string>
+    <string name="garage_leave">Покинуть гараж</string>
+    <string name="garage_leave_title">Покинуть гараж?</string>
+    <string name="garage_leave_text">Общие машины можно оставить на этом телефоне личными или удалить с него. У остальных участников всё останется.</string>
+    <string name="garage_leave_keep">Оставить личными</string>
+    <string name="garage_leave_delete">Удалить</string>
+    <string name="garage_join_title">Вступить в гараж</string>
+    <string name="garage_join_text">Вставьте код, который вам прислали. Можно и отсканировать QR-код камерой телефона — приложение откроется само.</string>
+    <string name="garage_join_link_text">Вступить в гараж %1$s? Его общие машины появятся на этом телефоне.</string>
+    <string name="garage_already_in">Этот телефон уже в гараже. Чтобы перейти в другой, сначала покиньте текущий в настройках.</string>
+    <string name="garage_share_cars_hint">Чтобы машина появилась у всех, откройте её и включите «Общая машина».</string>
+    <string name="sync_summary">Гараж сверен: получено %1$d, отправлено %2$d</string>
+    <string name="sync_joined">Вы в гараже: получено записей — %1$d</string>
+    <string name="sync_lever_description">Синхронизировать гараж</string>
+    <string name="sync_gear_idle">Гараж сверен</string>
+    <string name="sync_gear_syncing">Идёт синхронизация</string>
+    <string name="sync_gear_error">Ошибка синхронизации</string>
+    <string name="sync_error_offline">Нет связи с сервером — изменения отправятся, когда появится сеть.</string>
+    <string name="sync_error_denied">Нет доступа к гаражу: возможно, вас исключили или в консоли Firebase не те правила базы.</string>
+    <string name="sync_error_no_database">В конфиге Firebase нет адреса базы: скачайте google-services.json заново — уже после создания Realtime Database.</string>
+    <string name="sync_error_auth">Не удалось войти: включите анонимный вход в консоли Firebase (Authentication → Sign-in method).</string>
+    <string name="sync_error_bad_code">В коде опечатка — проверьте его ещё раз.</string>
+    <string name="sync_error_other">Синхронизация не удалась. Попробуйте ещё раз позже.</string>
+    <string name="car_shared">Общая машина</string>
+    <string name="car_shared_hint_on">Видна всем участникам гаража</string>
+    <string name="car_shared_hint_off">Только на этом телефоне</string>
+    <string name="car_make_personal_title">Сделать личной?</string>
+    <string name="car_make_personal_text">Машина останется на этом телефоне и перестанет обновляться из гаража. У остальных участников она останется общей.</string>
+    <string name="car_make_personal_confirm">Сделать личной</string>
+    <string name="onboarding_join">Вступить в гараж по коду</string>
 </resources>

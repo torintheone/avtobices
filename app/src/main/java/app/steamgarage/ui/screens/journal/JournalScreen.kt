@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import app.steamgarage.AppContainer
 import app.steamgarage.R
+import app.steamgarage.ui.screens.LocalTabBarActions
 import app.steamgarage.data.GarageSnapshot
 import app.steamgarage.data.db.CarEntity
 import app.steamgarage.data.db.ItemEntity
@@ -126,7 +127,7 @@ fun JournalScreen(
 ) {
     val palette = Steam.palette
     Column(Modifier.fillMaxSize()) {
-        SteamTopBar(title = stringResource(R.string.tab_journal))
+        SteamTopBar(title = stringResource(R.string.tab_journal), actions = LocalTabBarActions.current)
         LazyColumn(
             modifier = Modifier
                 .weight(1f)

@@ -109,6 +109,9 @@ interface MileageDao {
     @Query("SELECT * FROM mileage WHERE deleted = 0 ORDER BY date DESC, km DESC")
     fun observeAlive(): Flow<List<MileageEntity>>
 
+    @Query("SELECT * FROM mileage WHERE id = :id")
+    suspend fun get(id: String): MileageEntity?
+
     @Query("SELECT * FROM mileage WHERE carId = :carId")
     suspend fun byCar(carId: String): List<MileageEntity>
 

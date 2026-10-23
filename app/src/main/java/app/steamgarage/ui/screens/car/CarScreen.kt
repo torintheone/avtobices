@@ -41,6 +41,7 @@ import app.steamgarage.ui.components.BrassButton
 import app.steamgarage.ui.components.BrassPlate
 import app.steamgarage.ui.components.CarBadge
 import app.steamgarage.ui.components.CategoryPlate
+import app.steamgarage.ui.components.ConfirmDialog
 import app.steamgarage.ui.components.EmptyState
 import app.steamgarage.ui.components.EngravedText
 import app.steamgarage.ui.components.OdometerDisplay
@@ -48,6 +49,7 @@ import app.steamgarage.ui.components.PipeDivider
 import app.steamgarage.ui.components.SteamDialog
 import app.steamgarage.ui.components.SteamGauge
 import app.steamgarage.ui.components.SteamPanel
+import app.steamgarage.ui.components.SteamSwitchRow
 import app.steamgarage.ui.components.SteamTextField
 import app.steamgarage.ui.components.StatusBadge
 import app.steamgarage.ui.components.ValveButton
@@ -64,6 +66,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -113,6 +116,26 @@ class CarViewModel(private val container: AppContainer, private val carId: Strin
         }
     }
 
+    /** Гараж, в котором состоит телефон: только тогда машину можно сделать общей. */
+    val garageCode: StateFlow<String?> = container.sync.garage
+        .map { it?.code }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    fun setShared(shared: Boolean) {
+        viewModelScope.launch {
+            val code = garageCode.value ?: container.database.garage().get()?.code ?: return@launch
+            if (shared) {
+                container.settings.unhideSharedCar(carId)
+                repo.setCarGarage(carId, code)
+            } else {
+                // Сначала прячем копию гаража, чтобы приходящие правки не сделали машину общей обратно.
+                container.settings.hideSharedCar(carId)
+                repo.setCarGarage(carId, null)
+            }
+            container.sound.play(Sfx.STEAM)
+        }
+    }
+
     fun saveTemplate(name: String) {
         viewModelScope.launch {
             repo.saveTemplate(name, carId)
@@ -136,6 +159,8 @@ fun CarHost(
 ) {
     val vm = steamViewModel(key = "car-$carId") { CarViewModel(it, carId) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val garageCode by vm.garageCode.collectAsStateWithLifecycle()
+    var confirmPersonal by rememberSaveable { mutableStateOf(false) }
     var mileageOpen by rememberSaveable { mutableStateOf(false) }
     var serviceRequest by remember { mutableStateOf<ServiceRequest?>(null) }
     var actionHandled by rememberSaveable { mutableStateOf(false) }
@@ -173,7 +198,22 @@ fun CarHost(
             serviceRequest = ServiceRequest.New(emptyList(), batch = true)
         },
         onSaveTemplate = { templateDialog = true },
+        garageCode = garageCode,
+        onSetShared = { shared -> if (shared) vm.setShared(true) else confirmPersonal = true },
     )
+
+    if (confirmPersonal) {
+        ConfirmDialog(
+            title = stringResource(R.string.car_make_personal_title),
+            text = stringResource(R.string.car_make_personal_text),
+            confirmText = stringResource(R.string.car_make_personal_confirm),
+            onConfirm = {
+                confirmPersonal = false
+                vm.setShared(false)
+            },
+            onDismiss = { confirmPersonal = false },
+        )
+    }
 
     if (mileageOpen) {
         MileageDialog(
@@ -214,6 +254,8 @@ fun CarScreen(
     onUpdateMileage: () -> Unit,
     onBatchService: () -> Unit,
     onSaveTemplate: () -> Unit,
+    garageCode: String? = null,
+    onSetShared: (Boolean) -> Unit = {},
 ) {
     val car = summary.car
     // Из уведомления: подсвеченный расходник прокручивается в поле зрения.
@@ -267,6 +309,19 @@ fun CarScreen(
                 modifier = Modifier.weight(1f),
             )
             ValveButton(text = stringResource(R.string.car_edit), onClick = onEditCar, modifier = Modifier.weight(1f))
+        }
+
+        // «Личная / Общая» — только когда телефон состоит в гараже.
+        if (garageCode != null) {
+            val shared = car.garageId != null
+            SteamPanel(Modifier.fillMaxWidth()) {
+                SteamSwitchRow(
+                    text = stringResource(R.string.car_shared),
+                    supportingText = stringResource(if (shared) R.string.car_shared_hint_on else R.string.car_shared_hint_off),
+                    checked = shared,
+                    onCheckedChange = onSetShared,
+                )
+            }
         }
 
         PipeDivider()

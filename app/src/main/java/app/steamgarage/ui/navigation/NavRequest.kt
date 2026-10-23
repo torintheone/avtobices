@@ -23,6 +23,8 @@ object LaunchExtras {
     const val EXTRA_ITEMS = "items"
     /** Уведомление, из которого открыли приложение: после перехода его можно убрать. */
     const val EXTRA_NOTIFICATION_ID = "notification_id"
+    const val SCHEME = "steamgarage"
+    const val HOST_JOIN = "join"
 }
 
 /** Разбор интента запуска. null — обычный запуск без особого перехода. */
@@ -35,5 +37,9 @@ fun Intent.toNavRequest(): NavRequest? = when (action) {
             actionItems = getStringExtra(LaunchExtras.EXTRA_ITEMS),
         )
     }
+    // Ссылка-приглашение steamgarage://join?code=… из QR-кода или сообщения.
+    Intent.ACTION_VIEW -> data
+        ?.takeIf { it.scheme == LaunchExtras.SCHEME && it.host == LaunchExtras.HOST_JOIN }
+        ?.let { NavRequest.JoinGarage(it.getQueryParameter("code").orEmpty()) }
     else -> null
 }

@@ -24,6 +24,12 @@ object Format {
     /** Время ЧЧ:ММ: 9, 5 → «09:05». */
     fun time(hour: Int, minute: Int): String = "%02d:%02d".format(hour, minute)
 
+    /** Момент времени по часам телефона: «23.10.2026 09:05». */
+    fun dateTime(millis: Long): String {
+        val t = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault())
+        return "${date(t.toLocalDate())} ${time(t.hour, t.minute)}"
+    }
+
     /** Копейки → «3 500» или «3 500,50» (без знака ₽ — его добавляет строка ресурса). */
     fun money(kopecks: Long): String {
         val rubles = kopecks / 100

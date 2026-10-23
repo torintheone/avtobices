@@ -55,10 +55,15 @@ import app.steamgarage.ui.components.SteamTimePickerDialog
 import app.steamgarage.ui.components.ValveButton
 import app.steamgarage.ui.screens.SteamScreen
 import app.steamgarage.ui.screens.notify.rememberNotificationsAllowed
+import app.steamgarage.ui.screens.sync.GarageActions
+import app.steamgarage.ui.screens.sync.GaragePanel
+import app.steamgarage.ui.screens.sync.GarageUiState
+import app.steamgarage.ui.screens.sync.shareGarageCode
 import app.steamgarage.ui.screens.steamViewModel
 import app.steamgarage.ui.theme.Steam
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -114,6 +119,41 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
 
     fun voiceTest() = container.voice.test()
 
+    val garageState: StateFlow<GarageUiState> = combine(
+        container.sync.garage,
+        container.sync.status,
+        container.sync.members,
+        settingsRepo.settings,
+    ) { garage, status, members, s ->
+        GarageUiState(
+            configured = container.sync.configured,
+            garage = garage,
+            status = status,
+            members = members,
+            myUid = container.sync.currentUid(),
+            lastSyncAt = s.lastSyncAt,
+            lastReceived = s.lastSyncReceived,
+            lastSent = s.lastSyncSent,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GarageUiState(configured = container.sync.configured))
+
+    // Ошибки синхронизации показывает статус под кнопками — здесь их достаточно перехватить.
+    fun createGarage() {
+        viewModelScope.launch { runCatching { container.sync.createGarage() } }
+    }
+
+    fun joinGarage(code: String) {
+        viewModelScope.launch { runCatching { container.sync.joinGarage(code) } }
+    }
+
+    fun syncNow() {
+        viewModelScope.launch { container.syncWithFeedback() }
+    }
+
+    fun leaveGarage(keepData: Boolean) {
+        viewModelScope.launch { container.sync.leaveGarage(keepData) }
+    }
+
     fun installVoice() {
         if (!container.voice.openVoiceInstall()) SystemSettings.openTtsSettings(context)
     }
@@ -129,6 +169,7 @@ fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val cars by vm.cars.collectAsStateWithLifecycle()
     val voiceStatus by vm.voiceStatus.collectAsStateWithLifecycle()
+    val garageState by vm.garageState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val s = settings ?: return
     SettingsScreen(
@@ -148,6 +189,14 @@ fun SettingsHost(chromePadding: PaddingValues, onAbout: () -> Unit) {
             onCheckNow = vm::checkNow,
             onOpenSystemNotifications = { SystemSettings.openNotificationSettings(context) },
             onOpenAppDetails = { SystemSettings.openAppDetails(context) },
+        ),
+        garage = garageState,
+        garageActions = GarageActions(
+            onCreate = vm::createGarage,
+            onJoin = vm::joinGarage,
+            onSync = vm::syncNow,
+            onLeave = vm::leaveGarage,
+            onShare = { shareGarageCode(context, it) },
         ),
         sound = SoundSettings(
             voiceStatus = voiceStatus,
@@ -195,6 +244,8 @@ fun SettingsScreen(
     onAbout: () -> Unit,
     notifications: NotificationSettings = NotificationSettings(),
     sound: SoundSettings = SoundSettings(),
+    garage: GarageUiState = GarageUiState(),
+    garageActions: GarageActions = GarageActions(),
 ) {
     val palette = Steam.palette
     SteamScreen(title = stringResource(R.string.tab_settings), chromePadding = chromePadding) {
@@ -213,6 +264,10 @@ fun SettingsScreen(
                 BrassButton(text = stringResource(R.string.action_save), onClick = { onDeviceName(name) })
             }
         }
+
+        // ── Общий гараж ──
+        SectionTitle(stringResource(R.string.settings_garage))
+        GaragePanel(garage, garageActions)
 
         // ── Уведомления ──
         SectionTitle(stringResource(R.string.settings_notifications))
@@ -266,7 +321,6 @@ fun SettingsScreen(
         // ── О приложении ──
         SectionTitle(stringResource(R.string.settings_about))
         ValveButton(text = stringResource(R.string.settings_about_open), onClick = onAbout)
-        Text(stringResource(R.string.settings_more_soon), style = MaterialTheme.typography.bodySmall, color = palette.textSecondary)
     }
 }
 
