@@ -1,0 +1,17 @@
+name: probe
+on: push
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Latest stable versions on Google Maven
+        run: |
+          for a in com/android/tools/build/gradle androidx/compose/compose-bom androidx/activity/activity-compose androidx/core/core-ktx androidx/lifecycle/lifecycle-runtime-compose androidx/navigation/navigation-compose androidx/room/room-runtime androidx/work/work-runtime-ktx androidx/datastore/datastore-preferences com/google/firebase/firebase-bom com/google/gms/google-services androidx/compose/ui/ui androidx/compose/material3/material3 androidx/compose/foundation/foundation androidx/compose/animation/animation androidx/core/core-splashscreen androidx/test/ext/junit androidx/test/core androidx/compose/ui/ui-test-junit4 androidx/annotation/annotation; do
+            echo "== $a: $(curl -s https://dl.google.com/dl/android/maven2/$a/maven-metadata.xml | grep -oE '<version>[^<]+</version>' | sed 's/<[^>]*>//g' | grep -viE 'alpha|beta|rc|dev|snapshot' | tail -6 | tr '\n' ' ')"
+          done
+      - name: Android SDK on the runner
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME" "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
+          java -version
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --list 2>/dev/null | grep -E "platforms;android-[0-9]+ |build-tools;3[4-9]" | sort -u | head -60
