@@ -41,6 +41,7 @@ import app.steamgarage.ui.screens.journal.journal
 import app.steamgarage.ui.screens.onboarding.OnboardingScreen
 import app.steamgarage.ui.screens.settings.SettingsScreen
 import app.steamgarage.ui.theme.SteamTheme
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.time.LocalDate
@@ -57,6 +58,7 @@ import org.robolectric.annotation.GraphicsMode
  * Скриншоты экранов с тестовыми данными. Запуск: ./gradlew -Pscreenshots testDebugUnitTest.
  * PNG складываются в app/build/outputs/roborazzi — по ним проверяется внешний вид без телефона.
  */
+@OptIn(ExperimentalRoborazziApi::class)
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], qualifiers = "w400dp-h860dp-hdpi")

@@ -107,8 +107,8 @@ object StatusCalculator {
             else -> if ((kmWear ?: 0f) >= (timeWear ?: 0f)) Metric.KM else Metric.DAYS
         }
         val warnFraction = when (primary) {
-            Metric.KM -> warnKm!!.toFloat() / intervalKm!!
-            Metric.DAYS -> warnDays!!.toFloat() / intervalDays
+            Metric.KM -> (warnKm ?: 0).toFloat() / (intervalKm ?: 1)
+            Metric.DAYS -> (warnDays ?: 0).toFloat() / intervalDays
         }
         return ItemState(
             status = status,

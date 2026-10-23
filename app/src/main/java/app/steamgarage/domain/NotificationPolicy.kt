@@ -39,7 +39,8 @@ object NotificationPolicy {
                 // Уже сообщали; если было «Пора менять» (интервал увеличили) — просто запоминаем «Скоро».
                 else -> NotifyDecision(false, state.copy(lastStatus = ItemStatus.SOON))
             }
-            ItemStatus.OVERDUE -> {
+            else -> {
+                // Пора менять: при переходе в этот статус и затем раз в неделю.
                 val last = state.lastNotifiedDay
                 val repeatDue = last == null || today - last >= Defaults.OVERDUE_REPEAT_DAYS
                 if (state.lastStatus != ItemStatus.OVERDUE || repeatDue) {
@@ -48,7 +49,6 @@ object NotificationPolicy {
                     NotifyDecision(false, state)
                 }
             }
-            else -> NotifyDecision(false, state)
         }
     }
 

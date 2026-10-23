@@ -28,12 +28,16 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: |
+            21
+            17
 
       - uses: gradle/actions/setup-gradle@v6
         with:
           # Рабочая ветка — не main, поэтому кеш Gradle разрешено записывать с любой ветки.
           cache-read-only: false
+          # Без длинной таблицы кеша в журнале: так ошибки сборки видны в его конце.
+          add-job-summary: never
 
       - name: Версия и нужен ли релиз
         id: version
@@ -88,7 +92,7 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew --stacktrace -PappVersion=${{ steps.version.outputs.version }} testDebugUnitTest assembleRelease
+        run: ./gradlew --stacktrace -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_21_X64 -PappVersion=${{ steps.version.outputs.version }} testDebugUnitTest assembleRelease
 
       - name: Отчёт тестов
         if: failure()

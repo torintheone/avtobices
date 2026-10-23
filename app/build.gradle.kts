@@ -92,8 +92,14 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+// Код компилируется под Java 17, а тесты запускаются на Java 21: Robolectric для Android 16+ требует её.
+val testLauncher = extensions.getByType<JavaToolchainService>().launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(21))
+}
+
 // Скриншоты экранов (тесты *ScreenshotTest) рисуются отдельным запуском: ./gradlew -Pscreenshots testDebugUnitTest
 tasks.withType<Test>().configureEach {
+    javaLauncher.set(testLauncher)
     if (providers.gradleProperty("screenshots").isPresent) {
         filter { includeTestsMatching("*ScreenshotTest") }
         systemProperty("roborazzi.test.record", "true")

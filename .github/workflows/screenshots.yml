@@ -24,14 +24,18 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: |
+            21
+            17
 
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: false
+          # Без длинной таблицы кеша в журнале: так ошибки сборки видны в его конце.
+          add-job-summary: never
 
       - name: Нарисовать экраны
-        run: ./gradlew --stacktrace -Pscreenshots testDebugUnitTest
+        run: ./gradlew --stacktrace -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_21_X64 -Pscreenshots testDebugUnitTest
 
       - name: Отчёт тестов
         if: failure()
