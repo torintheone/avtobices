@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Гараж: здание с подъёмными воротами. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,2.5L1.8,10.2L3,11.8L3.5,11.4V21.5H6.8V12.6H17.2V21.5H20.5V11.4L21,11.8L22.2,10.2Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M8.2,14H15.8V15.7H8.2Z M8.2,16.9H15.8V18.6H8.2Z M8.2,19.8H15.8V21.5H8.2Z" />
+</vector>

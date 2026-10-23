@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Сроки: манометр со стрелкой. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M2.5,12.5A9.5,9.5 0,1 1,21.5 12.5A9.5,9.5 0,1 1,2.5 12.5Z M4.8,12.5A7.2,7.2 0,1 0,19.2 12.5A7.2,7.2 0,1 0,4.8 12.5Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M6.2,15.8L7.6,15.2L7.9,16L6.5,16.6Z M17.8,15.8L16.4,15.2L16.1,16L17.5,16.6Z M11.5,6.6H12.5V8.2H11.5Z M6.9,8.6L7.6,7.9L8.7,9L8,9.7Z M17.1,8.6L16.4,7.9L15.3,9L16,9.7Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M11.2,13.3L15.9,8.1L16.7,8.8L12.6,14.6Z M12,11.2A1.7,1.7 0,1 1,12 14.6A1.7,1.7 0,1 1,12 11.2Z" />
+</vector>

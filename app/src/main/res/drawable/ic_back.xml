@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Назад: стрелка. Собственный рисунок. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:autoMirrored="true"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M20.5,10.8H8.3L13.6,5.5L11.9,3.8L3.7,12L11.9,20.2L13.6,18.5L8.3,13.2H20.5Z" />
+</vector>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Название приложения меняется здесь и в константе AppInfo.SLUG. -->
+    <string name="app_name">Паровой гараж</string>
+
+    <!-- Общие действия -->
+    <string name="action_back">Назад</string>
+
+    <!-- Нижняя навигация -->
+    <string name="tab_garage">Гараж</string>
+    <string name="tab_due">Сроки</string>
+    <string name="tab_journal">Журнал</string>
+    <string name="tab_settings">Настройки</string>
+
+    <!-- Заглушки вкладок (этап 0) -->
+    <string name="stub_due">Здесь появятся все расходники всех машин, отсортированные по срочности.</string>
+    <string name="stub_journal">Здесь появится журнал всех замен с фильтрами и суммой затрат.</string>
+    <string name="stub_settings_hint">Остальные настройки появятся вместе с машинами, уведомлениями и звуком.</string>
+    <string name="stub_stage">Отсек открывается на этапе %1$d</string>
+
+    <!-- Витрина механизмов (этап 0) -->
+    <string name="showcase_title">Витрина механизмов</string>
+    <string name="showcase_intro">Каркас «Парового гаража»: здесь собраны все детали интерфейса. Покрутите вентили, дёрните рычаг, переключите тумблеры.</string>
+    <string name="showcase_plate">Латунная табличка</string>
+    <string name="showcase_plate_car">Лада Веста</string>
+    <string name="showcase_plate_number">А 123 ВС 77</string>
+    <string name="showcase_plate_shared">общая</string>
+    <string name="showcase_gauges">Манометры</string>
+    <string name="showcase_gauges_hint">Стрелка показывает износ: латунь — норма, медь — скоро, красная эмаль — пора менять.</string>
+    <string name="showcase_gauge_live">Подвиньте ползунок — стрелка догонит его на пружине.</string>
+    <string name="showcase_gauge_live_label">Тестовый износ</string>
+    <string name="showcase_lever">Рычаг</string>
+    <string name="showcase_lever_hint">Нажмите на рычаг или потяните его вниз.</string>
+    <string name="showcase_lever_count">Сработал раз: %1$d</string>
+    <string name="showcase_valves">Вентили</string>
+    <string name="showcase_valve_last">Последний вентиль: %1$s</string>
+    <string name="showcase_toggles">Тумблеры</string>
+    <string name="showcase_odometer">Одометр</string>
+    <string name="showcase_gears">Шестерни</string>
+    <string name="showcase_gears_hint">Крутятся только пока что-то происходит — например, идёт синхронизация.</string>
+    <string name="showcase_gears_toggle">Крутить шестерни</string>
+    <string name="showcase_typography">Шрифты</string>
+    <string name="showcase_typography_heading">Заголовок: Playfair Display SC</string>
+    <string name="showcase_typography_body">Основной текст набран шрифтом Old Standard TT. Замена занесена в журнал: моторное масло, 3 500 ₽, 12.03.2026.</string>
+    <string name="showcase_typography_secondary">Подписи — вторичным цветом, не мельче 14 sp.</string>
+
+    <!-- Примеры для витрины -->
+    <string name="sample_lever_replaced">Заменено</string>
+    <string name="sample_valve_add_item">Добавить расходник</string>
+    <string name="sample_valve_edit">Изменить</string>
+    <string name="sample_valve_service">Провести ТО</string>
+    <string name="sample_engine_oil">Моторное масло</string>
+    <string name="sample_cabin_filter">Салонный фильтр</string>
+    <string name="sample_brake_fluid">Тормозная жидкость</string>
+    <string name="sample_timing_belt">Ремень ГРМ</string>
+
+    <!-- Статусы -->
+    <string name="status_no_data">Нет данных</string>
+    <string name="status_ok">Норма</string>
+    <string name="status_soon">Скоро</string>
+    <string name="status_overdue">Пора менять</string>
+
+    <!-- Единицы под цифрами манометра -->
+    <string name="unit_km_left">км осталось</string>
+    <string name="unit_days_left">дн. осталось</string>
+    <string name="unit_km_over">км сверх срока</string>
+    <string name="unit_days_over">дн. сверх срока</string>
+    <string name="unit_km">км</string>
+    <string name="unit_percent" formatted="false">% износа</string>
+    <string name="gauge_description">%1$s: %2$s</string>
+
+    <!-- Настройки: тема -->
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_dark">Тёмная мастерская</string>
+    <string name="settings_theme_light">Дневная, пергаментная</string>
+    <string name="settings_theme_system">Как в системе</string>
+    <string name="settings_theme_day_toggle">Дневная тема</string>
+    <string name="settings_sound_toggle">Звуки механизмов</string>
+    <string name="settings_voice_toggle">Голос механика</string>
+    <string name="settings_toggle_soon">Заработает на этапе 3</string>
+</resources>

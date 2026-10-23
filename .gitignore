@@ -1,0 +1,26 @@
+# Gradle / Android Studio
+.gradle/
+build/
+/local.properties
+.idea/
+*.iml
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Ключи подписи и секреты — никогда не коммитим
+*.jks
+*.keystore
+*.p12
+keystore.properties
+signing/
+
+# Конфиг Firebase: репозиторий публичный, файл передаётся через секрет GOOGLE_SERVICES_JSON
+app/google-services.json
+
+# Python (tools/gen_sounds.py)
+__pycache__/
+.venv/
+
+.DS_Store
